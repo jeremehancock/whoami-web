@@ -372,6 +372,20 @@
     run: function (ctx) { ctx.term.clearScreen(); return undefined; }
   });
 
+  /* ---- reset ------------------------------------------------------- */
+  def('reset', {
+    group: 'System',
+    summary: 'start fresh, like you just opened the page',
+    usage: 'reset',
+    description: 'Reset the terminal to a clean slate: clear the screen and\n' +
+      'scrollback, return to the home directory, forget this session\'s\n' +
+      'command history, and replay the welcome banner. Unlike `clear`, this\n' +
+      'wipes your place and history too — exactly as if you had just opened\n' +
+      'the page. (Your theme is kept.)',
+    see: 'clear, motd',
+    run: function (ctx) { ctx.term.reset(); return undefined; }
+  });
+
   /* ---- echo -------------------------------------------------------- */
   def('echo', {
     group: 'System',

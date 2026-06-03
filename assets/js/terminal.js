@@ -518,5 +518,20 @@
     })();
   };
 
+  // Start over as if the page had just been opened: clear everything, go home,
+  // forget this session, restart the clock, and replay the boot animation.
+  // (The saved theme is kept — that's what loads on a real fresh open.)
+  Terminal.prototype.reset = function () {
+    this.history = [];
+    this.histIndex = 0;
+    this.draft = '';
+    this.cwd = FS.HOME;
+    this.bootTime = Date.now();
+    this.els.input.value = '';
+    this.ready = false;       // let boot() run its reveal again
+    this.clearScreen();
+    this.boot();
+  };
+
   global.Terminal = Terminal;
 })(window);
