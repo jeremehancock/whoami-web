@@ -13,6 +13,23 @@
   var THEMES = ['default', 'matrix', 'amber', 'dracula', 'light'];
   var THEME_KEY = 'whoami-theme';
 
+  /* Touch-only quick bar. `key` = a keyboard action (otherwise unreachable on
+   * phones), `run` = run this command now, `ins` = type this and wait.
+   * Edit this list to change the buttons. */
+  var QUICKBAR = [
+    { key: 'tab',  label: 'Tab', title: 'Autocomplete' },
+    { key: 'up',   label: '↑',   title: 'Previous command' },
+    { key: 'down', label: '↓',   title: 'Next command' },
+    { sep: true },
+    { run: 'whoami' },
+    { run: 'ls' },
+    { run: 'cd ..', label: 'cd ..' },
+    { ins: 'cat ',  label: 'cat' },
+    { run: 'tree' },
+    { run: 'help' },
+    { run: 'clear' }
+  ];
+
   function Terminal(els) {
     this.els = els;
     this.cwd = FS.HOME;
@@ -24,6 +41,8 @@
     this.themeName = 'default';
     this.ready = false; // input ignored until boot finishes
     this._wire();
+    this.buildQuickbar();
+    this._trackViewport();
   }
 
   Terminal.prototype._wire = function () {
@@ -62,6 +81,81 @@
     this.themeName = name;
     document.documentElement.setAttribute('data-theme', name);
     try { global.localStorage.setItem(THEME_KEY, name); } catch (e) { /* ignore */ }
+  };
+
+  /* ----- mobile quick-command bar ---------------------------------- */
+  Terminal.prototype.buildQuickbar = function () {
+    var self = this, bar = this.els.quickbar;
+    if (!bar) { return; }
+    QUICKBAR.forEach(function (item) {
+      if (item.sep) {
+        var s = document.createElement('span');
+        s.className = 'qsep';
+        bar.appendChild(s);
+        return;
+      }
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'qchip' + (item.key ? ' qkey' : '');
+      b.textContent = item.label || item.run || item.ins || '';
+      b.setAttribute('aria-label', item.title || b.textContent.trim());
+      if (item.key) { b.dataset.key = item.key; }
+      else if (item.run !== undefined) { b.dataset.run = item.run; }
+      else if (item.ins !== undefined) { b.dataset.ins = item.ins; }
+      bar.appendChild(b);
+    });
+
+    // Keep the input focused so tapping a chip never closes the keyboard or
+    // moves the caret; we act on the click instead.
+    bar.addEventListener('mousedown', function (e) {
+      if (e.target.closest('.qchip')) { e.preventDefault(); }
+    });
+    bar.addEventListener('click', function (e) {
+      var b = e.target.closest('.qchip');
+      if (!b) { return; }
+      self.focus();
+      if (b.dataset.key) { self.quickKey(b.dataset.key); }
+      else if ('run' in b.dataset) { self.quickRun(b.dataset.run); }
+      else if ('ins' in b.dataset) { self.quickInsert(b.dataset.ins); }
+    });
+  };
+
+  Terminal.prototype.quickRun = function (cmd) {
+    if (!this.ready) { return; }
+    this.els.input.value = cmd;
+    this.renderInput();
+    this.submit();
+  };
+
+  Terminal.prototype.quickInsert = function (text) {
+    if (!this.ready) { return; }
+    var input = this.els.input;
+    var pos = input.selectionStart != null ? input.selectionStart : input.value.length;
+    input.value = input.value.slice(0, pos) + text + input.value.slice(pos);
+    this._caret(pos + text.length);
+    this.renderInput();
+    this.focus();
+  };
+
+  Terminal.prototype.quickKey = function (name) {
+    if (!this.ready) { return; }
+    if (name === 'tab') { this._complete(); }
+    else if (name === 'up') { this._history(-1); }
+    else if (name === 'down') { this._history(1); }
+  };
+
+  // Keep the layout glued to the *visible* viewport so the quick bar and prompt
+  // stay above the on-screen keyboard instead of hiding behind it.
+  Terminal.prototype._trackViewport = function () {
+    var self = this, vv = global.visualViewport;
+    if (!vv) { return; }
+    function sync() {
+      document.documentElement.style.setProperty('--vvh', vv.height + 'px');
+      self.scroll();
+    }
+    vv.addEventListener('resize', sync);
+    vv.addEventListener('scroll', sync);
+    sync();
   };
 
   /* ----- prompt ----------------------------------------------------- */
