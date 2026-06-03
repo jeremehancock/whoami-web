@@ -267,7 +267,8 @@
    *   { ok, node, path, parts }  on success
    *   { ok:false, path, parts }  if the path doesn't exist          */
   function resolve(cwd, input) {
-    if (input === undefined || input === null || input === '') { input = HOME; }
+    // empty/no argument means "the current directory" (not home)
+    if (input === undefined || input === null || input === '') { input = '.'; }
     var parts;
     if (input.charAt(0) === '/') {
       parts = [];
