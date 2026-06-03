@@ -1,0 +1,147 @@
+{
+  "user": "guest",
+  "host": "whoami",
+  "profile": {
+    "name": "Jereme Hancock",
+    "role": "Software Developer",
+    "tagline": "I build things for the web and automate the boring parts.",
+    "location": "The Internet",
+    "shell": "jsh",
+    "github": "https://github.com/jeremehancock",
+    "email": "thejbenterprises@gmail.com"
+  },
+  "tree": {
+    "README.md": {
+      "file": "content/README.md"
+    },
+    "about": {
+      "bio.txt": {
+        "file": "content/about/bio.txt"
+      },
+      "journey.txt": [
+        "whoami --journey",
+        "================",
+        "",
+        "  now   Building, breaking, and rebuilding things on the web.",
+        "   ·    Fell down the automation rabbit hole and never climbed out.",
+        "   ·    Got hooked on open source and self-hosting everything.",
+        "   ·    Wrote my first line of code and felt the lights come on.",
+        "start   Curious kid who took the family computer apart \"to learn\".",
+        "",
+        "(Template timeline — edit content.json to tell your own story.)"
+      ],
+      "now.txt": [
+        "/now  —  what I'm focused on (June 2026)",
+        "----------------------------------------",
+        "",
+        "  * Polishing this terminal site (you're looking at it).",
+        "  * Tinkering with small self-hosted tools and automations.",
+        "  * Reading more, doom-scrolling less.",
+        "",
+        "Inspired by Derek Sivers' /now page idea. Ask me what's new."
+      ]
+    },
+    "projects": {
+      "README.md": [
+        "projects/",
+        "=========",
+        "",
+        "A few things I've built. `cat` any of them for the details:",
+        "",
+        "  terminal-portfolio.md   The site you're using right now.",
+        "  toolbox.md              Little scripts that save me time.",
+        "  open-source.md          Stuff I've shared with the world.",
+        "",
+        "(Sample entries — swap in your real projects in content.json.)"
+      ],
+      "terminal-portfolio.md": [
+        "# terminal-portfolio",
+        "",
+        "A personal website that pretends to be a Linux terminal. Pure",
+        "HTML/CSS/JS — no frameworks, no build step, no dependencies.",
+        "",
+        "  Stack    : vanilla JavaScript, a virtual filesystem, lots of ASCII art",
+        "  Features : ls/cd/cat navigation, man pages, tab-completion, themes",
+        "  Status   : you're soaking in it",
+        "",
+        "Source: https://github.com/jeremehancock/whoami-web"
+      ],
+      "toolbox.md": [
+        "# toolbox",
+        "",
+        "A grab-bag of scripts I reach for constantly — backups, renamers,",
+        "one-off CLIs, and \"I am never doing that by hand again\" automations.",
+        "",
+        "  Stack    : shell, Python, a sprinkle of cron",
+        "  Lesson   : if you do it three times, script it",
+        "",
+        "(Replace me with something you actually built.)"
+      ],
+      "open-source.md": [
+        "# open-source",
+        "",
+        "I believe in giving code back. Find my repos, issues, and the odd",
+        "pull request over on GitHub:",
+        "",
+        "  https://github.com/jeremehancock",
+        "",
+        "Stars are nice; good bug reports are nicer."
+      ]
+    },
+    "skills": {
+      "languages.txt": [
+        "languages",
+        "---------",
+        "  JavaScript / TS ███████████░",
+        "  Python          █████████░░░",
+        "  HTML / CSS      ███████████░",
+        "  Bash            ████████░░░░",
+        "  SQL             ███████░░░░░",
+        "",
+        "(Bars are vibes — tune them in content.json.)"
+      ],
+      "tools.txt": [
+        "tools & tech",
+        "------------",
+        "  Frontend : the web platform, a little React when it earns its keep",
+        "  Backend  : Node.js, REST/JSON, the occasional cron job",
+        "  DevOps   : Git, Linux, Docker, self-hosting on cheap boxes",
+        "  Editor   : whatever has good keybindings (and yes, I can exit vim)"
+      ]
+    },
+    "contact": {
+      "links.txt": [
+        "Find me online",
+        "==============",
+        "",
+        "  GitHub    https://github.com/jeremehancock",
+        "  Email     thejbenterprises@gmail.com",
+        "",
+        "  (Add LinkedIn / Mastodon / your site here in content.json.)",
+        "",
+        "Tip: the links above are clickable."
+      ],
+      "email.txt": [
+        "The fastest way to reach me:",
+        "",
+        "  thejbenterprises@gmail.com",
+        "",
+        "Real human replies. No newsletters, promise."
+      ]
+    },
+    ".secret": {
+      "flag.txt": [
+        "         .--.",
+        "        |o_o |   well, well, well...",
+        "        |:_/ |   you actually went looking.",
+        "       //   \\ \\",
+        "      (|     | )  respect. since you're here, try these:",
+        "     /'\\_   _/`\\",
+        "     \\___)=(___/     cowsay  ·  sudo make me a sandwich",
+        "                     neofetch  ·  theme amber  ·  vim",
+        "",
+        "  Curiosity is the whole job. Keep poking."
+      ]
+    }
+  }
+}

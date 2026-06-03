@@ -47,15 +47,16 @@ Type `help` in the terminal for the full list, or `man <command>` for details.
 
 ## Run it
 
-It's a static site — pick whichever you like:
+It's a static site, but the content lives in `content.json`, which the browser
+can only **fetch when the page is served over HTTP** — so serve it:
 
 ```bash
-# 1. just open it
-open index.html            # macOS  (xdg-open on Linux)
-
-# 2. or serve it (nicer URLs, exactly how a host sees it)
 python3 -m http.server 8000   # then visit http://localhost:8000
 ```
+
+You *can* still double-click `index.html`, but `file://` URLs can't fetch
+`content.json`, so you'll see a small built-in fallback instead of your content.
+(GitHub Pages and every real host serve over HTTP, so deployment just works.)
 
 ### Deploy to GitHub Pages
 
@@ -64,31 +65,74 @@ It'll be live at `https://<user>.github.io/whoami-web/`.
 
 ## Make it yours
 
-Everything you'd want to change lives in one file:
-[`assets/js/filesystem.js`](assets/js/filesystem.js).
+All the site content lives in one place: [`content.json`](content.json).
+Edit it and reload — no build step.
 
-- **Your details** — edit the `PROFILE` block (name, role, tagline, links).
-- **Your content** — the `TREE` near the bottom *is* the site. Each file is
-  just a string; add directories and files and the shell handles the rest.
-- **The prompt** — change `USER` / `HOST` (e.g. `visitor@yoursite`).
+```jsonc
+{
+  "user": "guest",            // the visitor's name in the prompt
+  "host": "whoami",           // guest@whoami
+  "profile": {                // shown by `whoami` and `neofetch`
+    "name": "Your Name",
+    "role": "What you do",
+    "tagline": "One-liner about you.",
+    "github": "https://github.com/you",
+    "email": "you@example.com"
+  },
+  "tree": {                   // this object *is* the filesystem
+    "README.md": ["A file as", "an array of lines."],
+    "about": {                            // a nested object is a directory
+      "bio.txt": "A file as a single string.",
+      "story.md": { "file": "content/story.md" }   // load from a real file
+    }
+  }
+}
+```
+
+**A file** can be written three ways — pick whatever's comfortable:
+
+| In `content.json`                | Meaning                                   |
+|----------------------------------|-------------------------------------------|
+| `"name": "one line of text"`     | inline file, single string                |
+| `"name": ["line", "line", ...]`  | inline file, one array entry per line     |
+| `"name": { "file": "content/x.md" }` | content loaded from a real `.md`/`.txt` |
+
+**A directory** is just a nested object (anything without `file`/`content`).
+Add a key, and `ls`/`cd`/`cat`/`tree`/tab-completion pick it up automatically.
+
+So you can keep short things inline and write long pages as real markdown files
+under [`content/`](content/) — there are two examples in there already
+(`README.md` and `about/bio.txt`).
+
+Other knobs:
+
 - **Themes & colours** — palettes live in
   [`assets/css/style.css`](assets/css/style.css) under `[data-theme="…"]`.
+- **Quick-bar buttons** (mobile) — the `QUICKBAR` list at the top of
+  [`assets/js/terminal.js`](assets/js/terminal.js).
 - **New commands** — add a spec to
   [`assets/js/commands.js`](assets/js/commands.js); it shows up in `help` and
   gets a `man` page automatically.
+
+> JSON has no comments, so the `// …` notes above are just for illustration —
+> don't put them in the real file.
 
 ## Project layout
 
 ```
 index.html
+content.json             >>> your content: profile + the filesystem tree <<<
+content/                 optional real .md/.txt files referenced from content.json
+├── README.md
+└── about/bio.txt
 assets/
 ├── css/style.css        window chrome, cursor, colours, themes
 └── js/
     ├── util.js          escaping, colours, linkify, tokenizer
-    ├── filesystem.js    >>> your content + the virtual filesystem <<<
+    ├── filesystem.js    the filesystem engine (builds the tree, resolves paths)
     ├── commands.js      every command + its man page
-    ├── terminal.js      the shell engine (input, history, completion)
-    └── main.js          wires it all together and boots
+    ├── terminal.js      the shell engine (input, history, completion, quick-bar)
+    └── main.js          loads content.json, then wires it up and boots
 ```
 
 ## License
