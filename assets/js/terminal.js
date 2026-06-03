@@ -49,7 +49,10 @@
     var self = this, els = this.els;
 
     els.input.addEventListener('keydown', function (e) { self._onKeyDown(e); });
-    els.input.addEventListener('input', function () { self.renderInput(); });
+    els.input.addEventListener('input', function () {
+      self.renderInput();
+      self.scroll(); // typing while scrolled up jumps the prompt back into view
+    });
     els.input.addEventListener('keyup', function () { self.renderInput(); });
     els.input.addEventListener('click', function () { self.renderInput(); });
     els.input.addEventListener('focus', function () {
@@ -249,14 +252,14 @@
       if (k === 'u') {
         e.preventDefault();
         input.value = input.value.slice(input.selectionStart);
-        this._caret(0); this.renderInput(); return;
+        this._caret(0); this.renderInput(); this.scroll(); return;
       }
-      if (k === 'a') { e.preventDefault(); this._caret(0); this.renderInput(); return; }
-      if (k === 'e') { e.preventDefault(); this._caret(input.value.length); this.renderInput(); return; }
+      if (k === 'a') { e.preventDefault(); this._caret(0); this.renderInput(); this.scroll(); return; }
+      if (k === 'e') { e.preventDefault(); this._caret(input.value.length); this.renderInput(); this.scroll(); return; }
       if (k === 'k') {
         e.preventDefault();
         input.value = input.value.slice(0, input.selectionStart);
-        this.renderInput(); return;
+        this.renderInput(); this.scroll(); return;
       }
     }
 
@@ -307,6 +310,7 @@
       ? this.draft : this.history[this.histIndex];
     this._caret(input.value.length);
     this.renderInput();
+    this.scroll(); // keep the recalled command visible
   };
 
   /* ----- submit & dispatch ----------------------------------------- */
@@ -431,6 +435,7 @@
     input.value = input.value.slice(0, start) + replacement + input.value.slice(pos);
     this._caret(start + replacement.length);
     this.renderInput();
+    this.scroll(); // keep the completed line visible
   };
 
   /* small completion helpers */
