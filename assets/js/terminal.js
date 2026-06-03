@@ -1,0 +1,407 @@
+/* =========================================================================
+ * terminal.js — the interactive shell engine.
+ * Exposes a single global: window.Terminal
+ * ========================================================================= */
+(function (global) {
+  'use strict';
+
+  var FS = global.FS;
+  var U = global.U;
+  var c = U.color;
+  var Commands = global.Commands;
+
+  var THEMES = ['default', 'matrix', 'amber', 'dracula', 'light'];
+  var THEME_KEY = 'whoami-theme';
+
+  function Terminal(els) {
+    this.els = els;
+    this.cwd = FS.HOME;
+    this.history = [];
+    this.histIndex = 0;
+    this.draft = '';
+    this.bootTime = Date.now();
+    this.themes = THEMES;
+    this.themeName = 'default';
+    this.ready = false; // input ignored until boot finishes
+    this._wire();
+  }
+
+  Terminal.prototype._wire = function () {
+    var self = this, els = this.els;
+
+    els.input.addEventListener('keydown', function (e) { self._onKeyDown(e); });
+    els.input.addEventListener('input', function () { self.renderInput(); });
+    els.input.addEventListener('keyup', function () { self.renderInput(); });
+    els.input.addEventListener('click', function () { self.renderInput(); });
+    els.input.addEventListener('focus', function () {
+      els.root.classList.add('focused');
+    });
+    els.input.addEventListener('blur', function () {
+      els.root.classList.remove('focused');
+    });
+
+    // Click/tap anywhere on the terminal -> focus the input. Doing it on the
+    // real `click` gesture is what lets the mobile keyboard pop up. We skip it
+    // when the user is selecting text or following a link.
+    els.root.addEventListener('click', function (e) {
+      if (e.target.closest && e.target.closest('a')) { return; }
+      if (String(global.getSelection()) === '') { self.focus(); }
+    });
+  };
+
+  /* ----- focus / theme --------------------------------------------- */
+  Terminal.prototype.focus = function () { this.els.input.focus(); };
+
+  Terminal.prototype.loadTheme = function () {
+    var saved;
+    try { saved = global.localStorage.getItem(THEME_KEY); } catch (e) { saved = null; }
+    this.setTheme(THEMES.indexOf(saved) > -1 ? saved : 'default');
+  };
+
+  Terminal.prototype.setTheme = function (name) {
+    this.themeName = name;
+    document.documentElement.setAttribute('data-theme', name);
+    try { global.localStorage.setItem(THEME_KEY, name); } catch (e) { /* ignore */ }
+  };
+
+  /* ----- prompt ----------------------------------------------------- */
+  Terminal.prototype.promptHtml = function () {
+    return c.green(FS.USER + '@' + FS.HOST) +
+           c.dim(':') +
+           c.blue(FS.displayPath(this.cwd)) +
+           c.dim('$ ');
+  };
+
+  Terminal.prototype.renderPrompt = function () {
+    this.els.promptEl.innerHTML = this.promptHtml();
+    this.els.titleText.textContent =
+      FS.USER + '@' + FS.HOST + ': ' + FS.displayPath(this.cwd);
+  };
+
+  Terminal.prototype.setCwd = function (abs) {
+    this.cwd = abs;
+    this.renderPrompt();
+  };
+
+  /* ----- output ----------------------------------------------------- */
+  Terminal.prototype.write = function (html, cls) {
+    var div = document.createElement('div');
+    div.className = 'block' + (cls ? ' ' + cls : '');
+    div.innerHTML = html;
+    this.els.output.appendChild(div);
+    this.scroll();
+    return div;
+  };
+
+  Terminal.prototype.clearScreen = function () { this.els.output.innerHTML = ''; };
+
+  Terminal.prototype.scroll = function () {
+    this.els.screen.scrollTop = this.els.screen.scrollHeight;
+  };
+
+  Terminal.prototype.echoLine = function (line) {
+    this.write(this.promptHtml() + U.esc(line), 'cmd-echo');
+  };
+
+  /* ----- message of the day ---------------------------------------- */
+  Terminal.prototype.motdLines = function () {
+    var banner = FS.ART.whoami.replace(/^\n/, '').split('\n');
+    var lines = banner.map(function (l) { return c.accent(l); });
+    var ts = new Date().toDateString() + ' ' + new Date().toLocaleTimeString();
+
+    function row(label, cmd, desc) {
+      return '  ' + c.dim(U.pad(label, 10)) + c.green(U.pad(cmd, 13)) + c.dim(desc);
+    }
+
+    return lines.concat([
+      '',
+      c.dim('Last login: ' + ts + ' on ttyS0'),
+      '',
+      c.dim("Welcome — you've reached ") + U.wrap(c.accent(FS.PROFILE.name), 'bold') +
+        c.dim("'s terminal resume."),
+      c.dim('You are logged in as ') + c.green(FS.USER) +
+        c.dim('. Have a look around; nothing bites.'),
+      '',
+      row('start', 'whoami', 'the short version of me'),
+      row('explore', 'ls / cd', 'wander through the filesystem'),
+      row('read', 'cat <file>', 'open anything you find'),
+      row('list all', 'help', 'every command this shell knows'),
+      '',
+      c.dim('<Tab> completes · up/down replays history · Ctrl+L clears'),
+      c.dim('─'.repeat(58))
+    ]);
+  };
+
+  Terminal.prototype.printMotd = function () {
+    this.write(this.motdLines().join('\n'));
+  };
+
+  /* ----- keyboard --------------------------------------------------- */
+  Terminal.prototype._onKeyDown = function (e) {
+    if (!this.ready) { return; }
+    var input = this.els.input;
+
+    // Ctrl shortcuts
+    if (e.ctrlKey && !e.altKey && !e.metaKey) {
+      var k = e.key.toLowerCase();
+      if (k === 'l') { e.preventDefault(); this.clearScreen(); return; }
+      if (k === 'c') {
+        e.preventDefault();
+        this.echoLine(input.value + '^C');
+        input.value = ''; this.histIndex = this.history.length;
+        this.renderInput(); return;
+      }
+      if (k === 'u') {
+        e.preventDefault();
+        input.value = input.value.slice(input.selectionStart);
+        this._caret(0); this.renderInput(); return;
+      }
+      if (k === 'a') { e.preventDefault(); this._caret(0); this.renderInput(); return; }
+      if (k === 'e') { e.preventDefault(); this._caret(input.value.length); this.renderInput(); return; }
+      if (k === 'k') {
+        e.preventDefault();
+        input.value = input.value.slice(0, input.selectionStart);
+        this.renderInput(); return;
+      }
+    }
+
+    switch (e.key) {
+      case 'Enter':
+        e.preventDefault();
+        this.submit();
+        return;
+      case 'ArrowUp':
+        e.preventDefault(); this._history(-1); return;
+      case 'ArrowDown':
+        e.preventDefault(); this._history(1); return;
+      case 'Tab':
+        e.preventDefault(); this._complete(); return;
+      default:
+        return; // normal typing handled by 'input' event
+    }
+  };
+
+  Terminal.prototype._caret = function (n) {
+    this.els.input.selectionStart = this.els.input.selectionEnd = n;
+  };
+
+  /* ----- input line rendering -------------------------------------- */
+  Terminal.prototype.renderInput = function () {
+    var input = this.els.input;
+    var val = input.value;
+    var pos = input.selectionStart;
+    if (pos === null || pos === undefined) { pos = val.length; }
+    var atChar = val.slice(pos, pos + 1);
+    this.els.typed.innerHTML = U.esc(val.slice(0, pos));
+    this.els.cursor.innerHTML = atChar ? U.esc(atChar) : '&nbsp;';
+    this.els.rest.innerHTML = U.esc(val.slice(pos + 1));
+  };
+
+  /* ----- history nav ----------------------------------------------- */
+  Terminal.prototype._history = function (dir) {
+    var input = this.els.input;
+    if (dir < 0) {
+      if (this.histIndex === 0) { return; }
+      if (this.histIndex === this.history.length) { this.draft = input.value; }
+      this.histIndex--;
+    } else {
+      if (this.histIndex >= this.history.length) { return; }
+      this.histIndex++;
+    }
+    input.value = this.histIndex === this.history.length
+      ? this.draft : this.history[this.histIndex];
+    this._caret(input.value.length);
+    this.renderInput();
+  };
+
+  /* ----- submit & dispatch ----------------------------------------- */
+  Terminal.prototype.submit = function () {
+    var input = this.els.input;
+    var line = input.value;
+    this.echoLine(line);
+    if (line.trim() && this.history[this.history.length - 1] !== line.trim()) {
+      this.history.push(line.trim());
+    }
+    this.histIndex = this.history.length;
+    this.draft = '';
+    input.value = '';
+    this.renderInput();
+    this.run(line);
+    this.renderPrompt();
+    this.scroll();
+  };
+
+  Terminal.prototype.run = function (line) {
+    var tokens = U.tokenize(line);
+    if (!tokens.length) { return; }
+    var name = tokens[0];
+    var spec = Commands[name];
+    if (!spec) {
+      this.write(
+        c.red('jsh: command not found: ' + U.esc(name)) + '\n' +
+        c.dim('Type ') + c.green('help') + c.dim(' to see what I can do.')
+      );
+      return;
+    }
+    var ctx = {
+      cmd: name,
+      args: tokens.slice(1),
+      rawArgs: tokens.slice(1).join(' '),
+      term: this,
+      print: this.write.bind(this)
+    };
+    var out;
+    try {
+      out = spec.run(ctx);
+    } catch (err) {
+      out = c.red('jsh: ' + name + ': internal error');
+      if (global.console) { console.error(err); }
+    }
+    if (out !== undefined && out !== null && out !== '') {
+      this.write(out);
+    } else if (out === '') {
+      this.write(''); // preserve an intentional blank line of output
+    }
+  };
+
+  /* ----- tab completion -------------------------------------------- */
+  Terminal.prototype._complete = function () {
+    var input = this.els.input;
+    var pos = input.selectionStart;
+    var left = input.value.slice(0, pos);
+    var frag = left.slice(left.lastIndexOf(' ') + 1);
+    // first word (=> complete a command) only if nothing but the fragment
+    // precedes the caret; otherwise we're completing a path argument.
+    var isFirstWord = left.slice(0, left.length - frag.length).trim() === '';
+
+    var candidates, apply;
+    if (isFirstWord) {
+      candidates = Object.keys(Commands).filter(function (n) {
+        return !Commands[n].hidden && n.indexOf(frag) === 0;
+      }).sort();
+      apply = function (name, sole) { return name + (sole ? ' ' : ''); };
+    } else {
+      var info = this._pathCandidates(frag);
+      candidates = info.names;
+      apply = function (name, sole) {
+        var node = info.dirNode.children[name];
+        var done = node && node.type === 'dir' ? '/' : (sole ? ' ' : '');
+        return info.dirPrefix + name + done;
+      };
+    }
+
+    if (!candidates.length) { return; }
+
+    if (candidates.length === 1) {
+      this._replaceFragment(frag, apply(candidates[0], true), pos);
+      return;
+    }
+
+    var lcp = commonPrefix(candidates);
+    if (lcp.length > (isFirstWord ? frag.length : baseName(frag).length)) {
+      // we can extend the fragment a bit further
+      this._replaceFragment(frag, apply2(isFirstWord, frag, lcp), pos);
+    } else {
+      // show the options, ls-style
+      this.echoLine(input.value);
+      this.write(candidates.map(function (n) {
+        var node = isFirstWord ? null : (this._pathCandidates(frag).dirNode.children[n]);
+        return isFirstWord ? c.green(n)
+          : (node && node.type === 'dir' ? c.blue(n + '/') : U.esc(n));
+      }.bind(this)).join('   '));
+    }
+  };
+
+  Terminal.prototype._pathCandidates = function (frag) {
+    var slash = frag.lastIndexOf('/');
+    var dirPrefix = slash > -1 ? frag.slice(0, slash + 1) : '';
+    var base = slash > -1 ? frag.slice(slash + 1) : frag;
+    var r = FS.resolve(this.cwd, dirPrefix || '.');
+    if (!r.ok || r.node.type !== 'dir') {
+      return { names: [], dirNode: { children: {} }, dirPrefix: dirPrefix };
+    }
+    var names = Object.keys(r.node.children).filter(function (n) {
+      if (n.indexOf(base) !== 0) { return false; }
+      if (n.charAt(0) === '.' && base.charAt(0) !== '.') { return false; }
+      return true;
+    }).sort();
+    return { names: names, dirNode: r.node, dirPrefix: dirPrefix };
+  };
+
+  Terminal.prototype._replaceFragment = function (frag, replacement, pos) {
+    var input = this.els.input;
+    var start = pos - frag.length;
+    input.value = input.value.slice(0, start) + replacement + input.value.slice(pos);
+    this._caret(start + replacement.length);
+    this.renderInput();
+  };
+
+  /* small completion helpers */
+  function baseName(frag) {
+    var s = frag.lastIndexOf('/');
+    return s > -1 ? frag.slice(s + 1) : frag;
+  }
+  function apply2(isFirstWord, frag, lcp) {
+    if (isFirstWord) { return lcp; }
+    var s = frag.lastIndexOf('/');
+    var dirPrefix = s > -1 ? frag.slice(0, s + 1) : '';
+    return dirPrefix + lcp;
+  }
+  function commonPrefix(arr) {
+    if (!arr.length) { return ''; }
+    var p = arr[0];
+    for (var i = 1; i < arr.length; i++) {
+      while (arr[i].indexOf(p) !== 0) { p = p.slice(0, -1); }
+    }
+    return p;
+  }
+
+  /* ----- boot ------------------------------------------------------- */
+  // Reveal the MOTD line-by-line, then hand control to the user.
+  Terminal.prototype.boot = function () {
+    var self = this;
+    this.loadTheme();
+    this.renderPrompt();
+    this.renderInput();
+    this.focus();
+
+    var lines = this.motdLines();
+    var box = this.write(''); // container we fill in
+    var i = 0, skipped = false;
+
+    function dump() {
+      box.innerHTML = lines.join('\n');
+      finish();
+    }
+    function finish() {
+      if (self.ready) { return; }
+      self.ready = true;
+      // a key used to skip the intro shouldn't leak into the prompt
+      self.els.input.value = '';
+      self.renderInput();
+      self.scroll();
+      self.focus();
+      global.removeEventListener('keydown', skip, true);
+      self.els.root.removeEventListener('mousedown', skip, true);
+    }
+    function skip() {
+      if (skipped) { return; }
+      skipped = true;
+      dump();
+    }
+
+    global.addEventListener('keydown', skip, true);
+    this.els.root.addEventListener('mousedown', skip, true);
+
+    (function tick() {
+      if (skipped) { return; }
+      if (i >= lines.length) { finish(); return; }
+      box.innerHTML = lines.slice(0, i + 1).join('\n');
+      self.scroll();
+      i++;
+      setTimeout(tick, i <= 7 ? 55 : 28); // banner a touch slower
+    })();
+  };
+
+  global.Terminal = Terminal;
+})(window);
