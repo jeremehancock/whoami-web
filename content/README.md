@@ -1,13 +1,14 @@
-Welcome to whoami — Jereme Hancock's interactive resume.
+Hey — I'm Michael Jereme Hancock (most people just call me Jereme).
 
-This is a (mostly) real shell. Snoop around like any Linux box:
+I'm just a guy who likes to tinker, and this little terminal is my corner
+of the web. Poke around like you would on any Linux box:
 
-    ls              see what lives in here
-    cd projects     step into a directory
-    cat <file>      read a file
     whoami          the short version of me
+    ls              see what's here
+    cd projects     stuff I've built
+    cd resume       where I've worked
+    cat <file>      read anything
     help            every command this shell knows
-    man <command>   how a command works
 
 Shortcuts:  <Tab> completes  ·  up/down walks history  ·  Ctrl+L clears
 

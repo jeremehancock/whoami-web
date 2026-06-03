@@ -2,13 +2,39 @@
   "user": "guest",
   "host": "whoami",
   "profile": {
-    "name": "Jereme Hancock",
-    "role": "Software Developer",
-    "tagline": "I build things for the web and automate the boring parts.",
-    "location": "The Internet",
+    "name": "Michael Jereme Hancock",
+    "role": "Software Developer @ Liquid Web",
+    "tagline": "I'm just a guy who likes to tinker.",
     "shell": "jsh",
     "github": "https://github.com/jeremehancock",
-    "email": "thejbenterprises@gmail.com"
+    "email": "michael@jeremehancock.com",
+    "links": [
+      {
+        "label": "site",
+        "value": "jereme.dev",
+        "url": "https://jereme.dev"
+      },
+      {
+        "label": "github",
+        "value": "github.com/jeremehancock",
+        "url": "https://github.com/jeremehancock"
+      },
+      {
+        "label": "linkedin",
+        "value": "linkedin.com/in/jeremehancock",
+        "url": "https://linkedin.com/in/jeremehancock"
+      },
+      {
+        "label": "projects",
+        "value": "dumbprojects.com",
+        "url": "https://dumbprojects.com"
+      },
+      {
+        "label": "email",
+        "value": "michael@jeremehancock.com",
+        "url": "mailto:michael@jeremehancock.com"
+      }
+    ]
   },
   "tree": {
     "README.md": {
@@ -18,27 +44,15 @@
       "bio.txt": {
         "file": "content/about/bio.txt"
       },
-      "journey.txt": [
-        "whoami --journey",
-        "================",
-        "",
-        "  now   Building, breaking, and rebuilding things on the web.",
-        "   ·    Fell down the automation rabbit hole and never climbed out.",
-        "   ·    Got hooked on open source and self-hosting everything.",
-        "   ·    Wrote my first line of code and felt the lights come on.",
-        "start   Curious kid who took the family computer apart \"to learn\".",
-        "",
-        "(Template timeline — edit content.json to tell your own story.)"
-      ],
       "now.txt": [
-        "/now  —  what I'm focused on (June 2026)",
-        "----------------------------------------",
+        "/now  —  what I'm up to",
+        "-----------------------",
         "",
-        "  * Polishing this terminal site (you're looking at it).",
-        "  * Tinkering with small self-hosted tools and automations.",
-        "  * Reading more, doom-scrolling less.",
+        "  * Software Developer II at Liquid Web (customer control panels).",
+        "  * Tinkering with Plex/Jellyfin tools: CLIX, Ludanta, Posteria.",
+        "  * Documenting the homelab and shipping the odd dumb project.",
         "",
-        "Inspired by Derek Sivers' /now page idea. Ask me what's new."
+        "The fun stuff lives at dumbprojects.com."
       ]
     },
     "projects": {
@@ -46,87 +60,85 @@
         "projects/",
         "=========",
         "",
-        "A few things I've built. `cat` any of them for the details:",
+        "Things I've built. `cat` any of them for details:",
         "",
-        "  terminal-portfolio.md   The site you're using right now.",
-        "  toolbox.md              Little scripts that save me time.",
-        "  open-source.md          Stuff I've shared with the world.",
+        "  clix.md                Plex terminal media player",
+        "  homelab.md             Offline homelab docs",
+        "  ludanta.md             Now Playing for Plex/Jellyfin",
+        "  posteria.md            Plex poster management app",
+        "  ai-game-collection.md  AI-powered games",
+        "  random-goat.md         Random goat gifs",
         "",
-        "(Sample entries — swap in your real projects in content.json.)"
+        "More at dumbprojects.com · github.com/jeremehancock"
       ],
-      "terminal-portfolio.md": [
-        "# terminal-portfolio",
+      "clix.md": [
+        "# CLIX",
         "",
-        "A personal website that pretends to be a Linux terminal. Pure",
-        "HTML/CSS/JS — no frameworks, no build step, no dependencies.",
+        "A Plex terminal media player — browse and play your Plex\nlibrary right from the command line.",
         "",
-        "  Stack    : vanilla JavaScript, a virtual filesystem, lots of ASCII art",
-        "  Features : ls/cd/cat navigation, man pages, tab-completion, themes",
-        "  Status   : you're soaking in it",
-        "",
-        "Source: https://github.com/jeremehancock/whoami-web"
+        "  link:  https://github.com/jeremehancock/CLIX"
       ],
-      "toolbox.md": [
-        "# toolbox",
+      "homelab.md": [
+        "# homelab.md",
         "",
-        "A grab-bag of scripts I reach for constantly — backups, renamers,",
-        "one-off CLIs, and \"I am never doing that by hand again\" automations.",
+        "Offline homelab documentation — your homelab, documented in\nmarkdown and served locally.",
         "",
-        "  Stack    : shell, Python, a sprinkle of cron",
-        "  Lesson   : if you do it three times, script it",
-        "",
-        "(Replace me with something you actually built.)"
+        "  link:  https://github.com/jeremehancock/homelab.md"
       ],
-      "open-source.md": [
-        "# open-source",
+      "ludanta.md": [
+        "# Ludanta",
         "",
-        "I believe in giving code back. Find my repos, issues, and the odd",
-        "pull request over on GitHub:",
+        "A \"Now Playing\" display for Plex and Jellyfin.",
         "",
-        "  https://github.com/jeremehancock",
+        "  link:  https://github.com/jeremehancock/Ludanta"
+      ],
+      "posteria.md": [
+        "# Posteria",
         "",
-        "Stars are nice; good bug reports are nicer."
+        "A web app for managing your Plex posters.",
+        "",
+        "  link:  https://posteria.app"
+      ],
+      "ai-game-collection.md": [
+        "# AI Game Collection",
+        "",
+        "A collection of AI-powered games.",
+        "",
+        "  link:  https://aigamecollection.com"
+      ],
+      "random-goat.md": [
+        "# Random Goat",
+        "",
+        "Looking for random goat gifs? Of course you are.",
+        "",
+        "  link:  https://randomgoat.com"
       ]
     },
-    "skills": {
-      "languages.txt": [
-        "languages",
-        "---------",
-        "  JavaScript / TS ███████████░",
-        "  Python          █████████░░░",
-        "  HTML / CSS      ███████████░",
-        "  Bash            ████████░░░░",
-        "  SQL             ███████░░░░░",
+    "resume": {
+      "experience.txt": {
+        "file": "content/resume/experience.txt"
+      },
+      "education.txt": [
+        "education",
+        "=========",
         "",
-        "(Bars are vibes — tune them in content.json.)"
-      ],
-      "tools.txt": [
-        "tools & tech",
-        "------------",
-        "  Frontend : the web platform, a little React when it earns its keep",
-        "  Backend  : Node.js, REST/JSON, the occasional cron job",
-        "  DevOps   : Git, Linux, Docker, self-hosting on cheap boxes",
-        "  Editor   : whatever has good keybindings (and yes, I can exit vim)"
+        "Northwestern Oklahoma State University (NWOSU)",
+        "  B.S., Business Administration",
+        "    - Selected as Most Promising E-commerce student by faculty."
       ]
     },
     "contact": {
       "links.txt": [
-        "Find me online",
-        "==============",
+        "contact",
+        "=======",
         "",
-        "  GitHub    https://github.com/jeremehancock",
-        "  Email     thejbenterprises@gmail.com",
+        "  email      michael@jeremehancock.com",
+        "  blog       https://jereme.dev",
+        "  linkedin   https://linkedin.com/in/jeremehancock",
+        "  projects   https://dumbprojects.com",
+        "  github     https://github.com/jeremehancock",
         "",
-        "  (Add LinkedIn / Mastodon / your site here in content.json.)",
-        "",
-        "Tip: the links above are clickable."
-      ],
-      "email.txt": [
-        "The fastest way to reach me:",
-        "",
-        "  thejbenterprises@gmail.com",
-        "",
-        "Real human replies. No newsletters, promise."
+        "Best way to reach me is email — I actually read it."
       ]
     },
     ".secret": {
@@ -137,8 +149,8 @@
         "       //   \\ \\",
         "      (|     | )  respect. since you're here, try these:",
         "     /'\\_   _/`\\",
-        "     \\___)=(___/     cowsay  ·  sudo make me a sandwich",
-        "                     neofetch  ·  theme amber  ·  vim",
+        "     \\___)=(___/     cowsay · neofetch · theme amber",
+        "                     and poke around dumbprojects.com",
         "",
         "  Curiosity is the whole job. Keep poking."
       ]

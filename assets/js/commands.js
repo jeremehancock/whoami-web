@@ -29,6 +29,12 @@
   // A line of plain text -> escaped + linkified (so URLs/emails are clickable)
   function text(line) { return U.linkify(U.esc(line)); }
 
+  // An explicit clickable link with custom display text.
+  function anchor(url, label) {
+    return '<a href="' + U.esc(url) + '" target="_blank" rel="noopener noreferrer">' +
+      U.esc(label) + '</a>';
+  }
+
   // Colour a filesystem entry name based on what it is.
   function paintEntry(name, node, classify) {
     if (node.type === 'dir') {
@@ -287,20 +293,28 @@
     see: 'neofetch, cat',
     run: function () {
       var bar = c.accent('▌');
-      var L = [
-        '',
-        bar + '  ' + U.wrap(c.accent(P.name), 'bold'),
-        bar + '  ' + c.dim(P.role + '  ·  ' + P.location),
-        '',
-        '   ' + c.cyan('“' + P.tagline + '”'),
-        '',
-        '   ' + c.dim(U.pad('github', 9)) + text(P.github),
-        '   ' + c.dim(U.pad('email', 9)) + text(P.email),
-        '   ' + c.dim(U.pad('shell', 9)) + P.shell + ' (this thing)',
-        '',
-        '   ' + c.dim('more →  ') + c.green('cat about/bio.txt') +
-          c.dim('  ·  ') + c.green('help')
-      ];
+      var L = ['', bar + '  ' + U.wrap(c.accent(P.name), 'bold')];
+
+      var roleLine = P.role || '';
+      if (P.location) { roleLine += (roleLine ? '  ·  ' : '') + P.location; }
+      if (roleLine) { L.push(bar + '  ' + c.dim(roleLine)); }
+
+      if (P.tagline) { L.push('', '   ' + c.cyan('“' + P.tagline + '”')); }
+      L.push('');
+
+      // links: use profile.links if present, else fall back to github/email
+      var links = Array.isArray(P.links) ? P.links.slice() : [];
+      if (!links.length) {
+        if (P.github) { links.push({ label: 'github', value: P.github, url: P.github }); }
+        if (P.email) { links.push({ label: 'email', value: P.email, url: 'mailto:' + P.email }); }
+      }
+      links.forEach(function (ln) {
+        L.push('   ' + c.dim(U.pad(ln.label, 10)) + anchor(ln.url, ln.value || ln.url));
+      });
+      if (P.shell) { L.push('   ' + c.dim(U.pad('shell', 10)) + P.shell + ' (this thing)'); }
+
+      L.push('', '   ' + c.dim('more →  ') + c.green('cat about/bio.txt') +
+        c.dim('  ·  ') + c.green('ls projects'));
       return L.join('\n');
     }
   });
@@ -319,13 +333,17 @@
       function field(label, value) {
         return c.yellow(U.pad(label, 11)) + value;
       }
+      var site = (P.links || []).filter(function (l) {
+        return /^(site|blog|website)$/.test(l.label);
+      })[0];
       var info = [
         c.green(FS.USER) + '@' + c.green(FS.HOST),
         c.dim('-----------------'),
         field('OS', 'whoami-web (pure JS)'),
         field('Host', P.name),
+        site ? field('Web', site.value) : null,
         field('Kernel', '6.18.5-vanilla-js'),
-        field('Shell', P.shell + ' 1.0'),
+        field('Shell', (P.shell || 'jsh') + ' 1.0'),
         field('Uptime', fmtUptime(Date.now() - ctx.term.bootTime)),
         field('Resolution', window.innerWidth + 'x' + window.innerHeight),
         field('Theme', ctx.term.themeName),
@@ -334,7 +352,7 @@
         '',
         ['clr-red','clr-yellow','clr-green','clr-cyan','clr-blue','clr-magenta']
           .map(function (k) { return U.wrap('███', k); }).join('')
-      ];
+      ].filter(function (x) { return x !== null; });
       var rows = Math.max(logo.length, info.length), out = [], i;
       for (i = 0; i < rows; i++) {
         var l = logo[i] !== undefined ? c.accent(U.pad(logo[i], width)) : U.pad('', width);

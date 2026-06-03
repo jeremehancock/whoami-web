@@ -1,11 +1,12 @@
-Hi, I'm Jereme Hancock. I build things for the web and automate the boring parts.
+Hi, I'm Michael Jereme Hancock — though most people just call me Jereme.
+I'm just a guy who likes to tinker.
 
-I'm a developer who's happiest with a terminal open and a problem to
-chew on. I like clean code, small sharp tools, and shipping things that
-people actually use. When something feels repetitive, I'd rather spend
-an afternoon scripting it away than do it twice.
+By day I'm a Software Developer at Liquid Web, building customer-facing
+control panels and doing full-stack work. By night I build things for the
+fun of it: Plex and Jellyfin tools like CLIX, Ludanta, and Posteria, a pile
+of "dumb projects," and a homelab I can't stop documenting.
 
-Off the keyboard you'll find me reading, tinkering with hardware, and
-chasing the next "I wonder if I could build that" idea.
+I've been making websites since 2004 and never really stopped. If something
+looks like it could be automated or self-hosted, I'll probably try.
 
-Keep exploring:  cat about/journey.txt   ·   cat about/now.txt
+Keep exploring:  cat about/now.txt  ·  ls projects  ·  cd resume

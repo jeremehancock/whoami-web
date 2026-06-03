@@ -101,8 +101,8 @@ Edit it and reload — no build step.
 Add a key, and `ls`/`cd`/`cat`/`tree`/tab-completion pick it up automatically.
 
 So you can keep short things inline and write long pages as real markdown files
-under [`content/`](content/) — there are two examples in there already
-(`README.md` and `about/bio.txt`).
+under [`content/`](content/) — there are three examples in there already
+(`README.md`, `about/bio.txt`, and `resume/experience.txt`).
 
 Other knobs:
 
@@ -124,7 +124,8 @@ index.html
 content.json             >>> your content: profile + the filesystem tree <<<
 content/                 optional real .md/.txt files referenced from content.json
 ├── README.md
-└── about/bio.txt
+├── about/bio.txt
+└── resume/experience.txt
 assets/
 ├── css/style.css        window chrome, cursor, colours, themes
 └── js/
