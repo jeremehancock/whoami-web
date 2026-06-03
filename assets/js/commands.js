@@ -18,6 +18,10 @@
   var c = U.color;
   var P = FS.PROFILE;
 
+  /* Mark output as ASCII art: it must not word-wrap (it shrinks / scrolls
+   * to fit narrow screens instead). The terminal reads the `.art` flag. */
+  function art(html) { return { html: html, art: true }; }
+
   /* ------------------------------------------------------------------ *
    * shared rendering helpers
    * ------------------------------------------------------------------ */
@@ -198,7 +202,7 @@
       lines.push('');
       lines.push(c.dim(nDirs + ' director' + (nDirs === 1 ? 'y' : 'ies') +
         ', ' + nFiles + ' file' + (nFiles === 1 ? '' : 's')));
-      return lines.join('\n');
+      return art(lines.join('\n'));
     }
   });
 
@@ -295,8 +299,7 @@
         '   ' + c.dim(U.pad('shell', 9)) + P.shell + ' (this thing)',
         '',
         '   ' + c.dim('more →  ') + c.green('cat about/bio.txt') +
-          c.dim('  ·  ') + c.green('ls projects') +
-          c.dim('  ·  ') + c.green('neofetch')
+          c.dim('  ·  ') + c.green('help')
       ];
       return L.join('\n');
     }
@@ -338,7 +341,7 @@
         var r = info[i] !== undefined ? info[i] : '';
         out.push(l + '   ' + r);
       }
-      return out.join('\n');
+      return art(out.join('\n'));
     }
   });
 
@@ -460,7 +463,7 @@
     summary: 'print the big ASCII banner',
     usage: 'banner',
     description: 'Print the giant "whoami" ASCII banner, because why not.',
-    run: function () { return c.accent(FS.ART.whoami); }
+    run: function () { return art(c.accent(FS.ART.whoami)); }
   });
 
   /* ---- cowsay ------------------------------------------------------ */
@@ -475,7 +478,7 @@
       var top = ' ' + '_'.repeat(msg.length + 2);
       var bot = ' ' + '-'.repeat(msg.length + 2);
       // escape the whole frame so the < > of the speech bubble are literal
-      return U.esc([top, '< ' + msg + ' >', bot, FS.ART.cow].join('\n'));
+      return art(U.esc([top, '< ' + msg + ' >', bot, FS.ART.cow].join('\n')));
     }
   });
 

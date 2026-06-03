@@ -126,7 +126,7 @@
 
 /* ----- reset-ish ----------------------------------------------------- */
 * { box-sizing: border-box; }
-html, body { height: 100%; }
+html, body { height: 100%; max-width: 100%; overflow-x: hidden; }
 
 body {
   margin: 0;
@@ -149,6 +149,7 @@ body {
   position: relative;
   display: flex;
   flex-direction: column;
+  touch-action: manipulation; /* kill the 300ms tap delay on mobile */
   width: min(960px, 100%);
   height: min(86vh, 760px);
   background: var(--bg);
@@ -216,6 +217,7 @@ body {
   position: relative;
   z-index: 2;
   flex: 1 1 auto;
+  min-width: 0;
   overflow-y: auto;
   overflow-x: hidden;
   padding: 14px 16px 18px;
@@ -230,9 +232,25 @@ body {
   overflow-wrap: anywhere;
   word-break: break-word;
 }
-.block { margin: 0; }
+.block { margin: 0; max-width: 100%; }
 .block:empty { height: 1.5em; }       /* a printed blank line keeps its height */
 .cmd-echo { margin-top: 2px; }
+
+/* ASCII art (banner, neofetch, tree, cowsay): never wrap. Instead shrink the
+   font so it fits narrow screens, and scroll horizontally only as a last
+   resort for anything wider than the screen even when shrunk. */
+.output .block.art {
+  white-space: pre;
+  overflow-wrap: normal;
+  word-break: normal;
+  overflow-x: auto;
+  overflow-y: hidden;
+  font-size: min(1em, 2.9vw);
+  line-height: 1.35;
+  -webkit-overflow-scrolling: touch;
+}
+.output .block.art::-webkit-scrollbar { height: 6px; }
+.output .block.art::-webkit-scrollbar-thumb { background: var(--border); border-radius: 6px; }
 
 /* ----- the live input line ------------------------------------------ */
 .input-line { display: block; }
@@ -266,6 +284,8 @@ body {
   background: transparent;
   color: transparent;
   z-index: -1;
+  /* 16px stops iOS Safari from zooming the page when the keyboard opens */
+  font-size: 16px;
 }
 
 /* ----- colours ------------------------------------------------------- */
@@ -302,7 +322,7 @@ a:hover { text-decoration-style: solid; }
 
 /* ----- small screens: go full-bleed --------------------------------- */
 @media (max-width: 680px) {
-  body { padding: 0; }
+  body { padding: 0; font-size: 13px; }
   .terminal {
     width: 100%;
     height: 100vh;
@@ -310,7 +330,8 @@ a:hover { text-decoration-style: solid; }
     border: 0;
     border-radius: 0;
   }
-  body { font-size: 13px; }
+  .screen { padding: 11px 12px 14px; }
+  .titlebar { height: 34px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

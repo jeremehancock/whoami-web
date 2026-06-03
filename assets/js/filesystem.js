@@ -170,16 +170,21 @@
     'Stars are nice; good bug reports are nicer.'
   ].join('\n');
 
+  // narrow enough to fit a phone without wrapping; tune the numbers (0-12)
+  function bar(label, filled) {
+    return '  ' + label.padEnd(15) + ' ' +
+      '█'.repeat(filled) + '░'.repeat(12 - filled);
+  }
   var SKILLS_LANG = [
     'languages',
     '---------',
-    '  JavaScript / TypeScript   ███████████░  daily driver',
-    '  Python                    █████████░░░  scripts & glue',
-    '  HTML / CSS                ███████████░  pixels & layout',
-    '  Bash                      ████████░░░░  duct tape supreme',
-    '  SQL                       ███████░░░░░  ask the database nicely',
+    bar('JavaScript / TS', 11),
+    bar('Python', 9),
+    bar('HTML / CSS', 11),
+    bar('Bash', 8),
+    bar('SQL', 7),
     '',
-    '(Bars are vibes, not benchmarks. Tune them in filesystem.js.)'
+    '(Bars are vibes — tune them in filesystem.js.)'
   ].join('\n');
 
   var SKILLS_TOOLS = [

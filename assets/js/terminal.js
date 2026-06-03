@@ -104,36 +104,37 @@
   };
 
   /* ----- message of the day ---------------------------------------- */
-  Terminal.prototype.motdLines = function () {
-    var banner = FS.ART.whoami.replace(/^\n/, '').split('\n');
-    var lines = banner.map(function (l) { return c.accent(l); });
+  // The banner is ASCII art (must not wrap — it shrinks to fit on mobile).
+  Terminal.prototype.motdBannerLines = function () {
+    return FS.ART.whoami.replace(/^\n/, '').split('\n')
+      .map(function (l) { return c.accent(l); });
+  };
+
+  // The welcome text wraps normally. Rows are kept narrow so they fit phones.
+  Terminal.prototype.motdTextLines = function () {
     var ts = new Date().toDateString() + ' ' + new Date().toLocaleTimeString();
-
-    function row(label, cmd, desc) {
-      return '  ' + c.dim(U.pad(label, 10)) + c.green(U.pad(cmd, 13)) + c.dim(desc);
+    function row(cmd, desc) {
+      return '  ' + c.green(U.pad(cmd, 11)) + c.dim('→  ' + desc);
     }
-
-    return lines.concat([
-      '',
+    return [
       c.dim('Last login: ' + ts + ' on ttyS0'),
       '',
       c.dim("Welcome — you've reached ") + U.wrap(c.accent(FS.PROFILE.name), 'bold') +
         c.dim("'s terminal resume."),
-      c.dim('You are logged in as ') + c.green(FS.USER) +
-        c.dim('. Have a look around; nothing bites.'),
+      c.dim('Logged in as ') + c.green(FS.USER) + c.dim('. Look around — nothing bites.'),
       '',
-      row('start', 'whoami', 'the short version of me'),
-      row('explore', 'ls / cd', 'wander through the filesystem'),
-      row('read', 'cat <file>', 'open anything you find'),
-      row('list all', 'help', 'every command this shell knows'),
+      row('whoami', 'the short version of me'),
+      row('ls / cd', 'explore the filesystem'),
+      row('cat <file>', 'read anything you find'),
+      row('help', 'every command I know'),
       '',
-      c.dim('<Tab> completes · up/down replays history · Ctrl+L clears'),
-      c.dim('─'.repeat(58))
-    ]);
+      c.dim('Tip: type a command and hit Enter. <Tab> completes, ↑/↓ = history.')
+    ];
   };
 
   Terminal.prototype.printMotd = function () {
-    this.write(this.motdLines().join('\n'));
+    this.write(this.motdBannerLines().join('\n'), 'art');
+    this.write(this.motdTextLines().join('\n'));
   };
 
   /* ----- keyboard --------------------------------------------------- */
@@ -257,7 +258,9 @@
       out = c.red('jsh: ' + name + ': internal error');
       if (global.console) { console.error(err); }
     }
-    if (out !== undefined && out !== null && out !== '') {
+    if (out && typeof out === 'object' && out.html !== undefined) {
+      this.write(out.html, out.art ? 'art' : undefined);
+    } else if (out !== undefined && out !== null && out !== '') {
       this.write(out);
     } else if (out === '') {
       this.write(''); // preserve an intentional blank line of output
@@ -365,12 +368,25 @@
     this.renderInput();
     this.focus();
 
-    var lines = this.motdLines();
-    var box = this.write(''); // container we fill in
+    var banner = this.motdBannerLines();
+    var lines = this.motdTextLines();
+    var artBox = this.write('', 'art'); // banner: doesn't wrap, fits to width
+    var txtBox = this.write('');        // welcome text: wraps normally
+
+    // a flat reveal timeline across both boxes
+    var steps = [];
+    banner.forEach(function (_, n) {
+      steps.push({ box: artBox, html: banner.slice(0, n + 1).join('\n') });
+    });
+    lines.forEach(function (_, n) {
+      steps.push({ box: txtBox, html: lines.slice(0, n + 1).join('\n') });
+    });
+
     var i = 0, skipped = false;
 
     function dump() {
-      box.innerHTML = lines.join('\n');
+      artBox.innerHTML = banner.join('\n');
+      txtBox.innerHTML = lines.join('\n');
       finish();
     }
     function finish() {
@@ -395,11 +411,11 @@
 
     (function tick() {
       if (skipped) { return; }
-      if (i >= lines.length) { finish(); return; }
-      box.innerHTML = lines.slice(0, i + 1).join('\n');
+      if (i >= steps.length) { finish(); return; }
+      steps[i].box.innerHTML = steps[i].html;
       self.scroll();
       i++;
-      setTimeout(tick, i <= 7 ? 55 : 28); // banner a touch slower
+      setTimeout(tick, i <= banner.length ? 55 : 28); // banner a touch slower
     })();
   };
 
