@@ -316,18 +316,61 @@
   /* ----- submit & dispatch ----------------------------------------- */
   Terminal.prototype.submit = function () {
     var input = this.els.input;
-    var line = input.value;
+    var raw = input.value;
+    input.value = '';
+    this.renderInput();
+
+    // bash-style history expansion: !n, !-n, !!, !prefix
+    var ex = this._expandHistory(raw);
+    if (ex && ex.error) {
+      this.echoLine(raw);
+      this.write(c.red('jsh: ' + U.esc(ex.token) + ': event not found'));
+      this.histIndex = this.history.length;
+      this.draft = '';
+      this.renderPrompt();
+      this.scroll();
+      return;
+    }
+    var line = ex ? ex.command : raw;     // run (and record) the expanded command
     this.echoLine(line);
+
     if (line.trim() && this.history[this.history.length - 1] !== line.trim()) {
       this.history.push(line.trim());
     }
     this.histIndex = this.history.length;
     this.draft = '';
-    input.value = '';
-    this.renderInput();
     this.run(line);
     this.renderPrompt();
     this.scroll();
+  };
+
+  // Expand a leading history reference. Returns:
+  //   null                          -> no expansion (line doesn't start with !)
+  //   { command: '...' }            -> the expanded command line
+  //   { error: true, token: '!x' }  -> the reference didn't resolve
+  Terminal.prototype._expandHistory = function (raw) {
+    var line = raw.replace(/^\s+/, '');
+    if (line.charAt(0) !== '!') { return null; }
+
+    var m = line.match(/^(\S+)([\s\S]*)$/);
+    var token = m[1], rest = m[2];
+    if (token === '!') { return null; }            // a lone '!' is literal
+
+    var h = this.history, idx = -1, ref = token.slice(1);
+    if (token === '!!') {
+      idx = h.length - 1;                           // last command
+    } else if (/^-?\d+$/.test(ref)) {
+      var n = parseInt(ref, 10);
+      if (n > 0) { idx = n - 1; }                   // !n  (1-based, as `history` shows)
+      else if (n < 0) { idx = h.length + n; }       // !-n (count back from the end)
+    } else {
+      for (var i = h.length - 1; i >= 0; i--) {     // !prefix (most recent match)
+        if (h[i].indexOf(ref) === 0) { idx = i; break; }
+      }
+    }
+
+    if (idx < 0 || idx >= h.length) { return { error: true, token: token }; }
+    return { command: h[idx] + rest };
   };
 
   Terminal.prototype.run = function (line) {

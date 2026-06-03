@@ -413,8 +413,15 @@
     group: 'System',
     summary: 'show command history',
     usage: 'history',
-    description: 'List the commands you have run this session. Press up/down\n' +
-      'at the prompt to walk back through them.',
+    description: 'List the commands you have run this session, each with a\n' +
+      'number. Re-run one with a "!" history expansion:\n\n' +
+      '  !n       run command number n        (e.g. !3)\n' +
+      '  !!       run the last command\n' +
+      '  !-2      run the command two back\n' +
+      '  !text    run the most recent command starting with "text"\n\n' +
+      'You can also press up/down at the prompt to walk through history.',
+    examples: 'history\n!1\n!!\n!cat',
+    see: 'clear, reset',
     run: function (ctx) {
       var h = ctx.term.history;
       if (!h.length) { return c.dim('(no history yet)'); }
