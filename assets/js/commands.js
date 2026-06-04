@@ -439,22 +439,26 @@
   def("grep", {
     group: "Reading",
     summary: "search for text in files",
-    usage: "grep [-i] [-n] [-r] <pattern> <file...>",
+    usage: "grep [-i] [-l] [-n] [-r] <pattern> <file...>",
     description:
       "Search the named FILEs for lines matching PATTERN and print them,\n" +
       "with the matches highlighted. PATTERN is a regular expression (a\n" +
       "plain word works fine too).\n\n" +
       "  -i   ignore case\n" +
+      "  -l   list only the names of files that contain a match\n" +
       "  -n   prefix each match with its line number\n" +
       "  -r   search directories recursively\n\n" +
-      "Without -r, grepping a directory is an error — just like the real\n" +
-      "thing. Hidden dot-entries are skipped when recursing.",
-    examples: "grep tinker about/bio.txt\ngrep -ri plex projects\ngrep -n link projects/clix.md",
+      "With -l you get one filename per matching file and nothing else (so\n" +
+      "-n has no effect). Without -r, grepping a directory is an error —\n" +
+      "just like the real thing. Hidden dot-entries are skipped when\n" +
+      "recursing.",
+    examples: "grep tinker about/bio.txt\ngrep -ri plex projects\ngrep -rl tinker ~\ngrep -n link projects/clix.md",
     see: "cat, find",
     run: function (ctx) {
       var ignore = false,
         number = false,
         recursive = false,
+        filesOnly = false,
         operands = [],
         onlyOperands = false,
         i;
@@ -466,6 +470,9 @@
           if (a.indexOf("i") > -1) {
             ignore = true;
           }
+          if (a.indexOf("l") > -1) {
+            filesOnly = true;
+          }
           if (a.indexOf("n") > -1) {
             number = true;
           }
@@ -476,7 +483,7 @@
           operands.push(a);
         }
       }
-      var usage = c.dim("usage: grep [-i] [-n] [-r] <pattern> <file...>");
+      var usage = c.dim("usage: grep [-i] [-l] [-n] [-r] <pattern> <file...>");
       if (!operands.length) {
         return c.red("grep: missing pattern") + "\n" + usage;
       }
@@ -515,6 +522,12 @@
           }
         }
         return found ? html + U.esc(line.slice(last)) : null;
+      }
+
+      // Does this line match at all? (cheap boolean, used by -l)
+      function test(line) {
+        re.lastIndex = 0;
+        return re.test(line);
       }
 
       // Gather files under a directory, skipping dot-entries, in path order.
@@ -559,12 +572,19 @@
         }
       });
 
-      // Pass 2: print errors and matching lines in order.
+      // Pass 2: print results. With -l, list each matching file once;
+      // otherwise print the matching lines in order.
       var showLabel = recursive || fileCount > 1;
       var out = [];
       units.forEach(function (u) {
         if (u.error) {
           out.push(u.error);
+          return;
+        }
+        if (filesOnly) {
+          if (emptyPat || u.content.split("\n").some(test)) {
+            out.push(paintEntry(u.label, { type: "file" }, false));
+          }
           return;
         }
         u.content.split("\n").forEach(function (line, idx) {
