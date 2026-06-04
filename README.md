@@ -72,6 +72,7 @@ Edit it and reload — no build step.
 
 ```jsonc
 {
+  "title": "whoami — Your Name", // the browser-tab title (falls back to index.html)
   "user": "guest",            // the visitor's name in the prompt
   "host": "whoami",           // guest@whoami
   "profile": {                // shown by `whoami` and `neofetch`

@@ -90,6 +90,10 @@
   function start() {
     loadManifest().then(function (manifest) {
       global.FS.setManifest(manifest);
+      // Browser-tab title comes from content.json. The static <title> in
+      // index.html stays as the fallback when it's missing (or content.json
+      // couldn't load, e.g. opened as a file:// URL).
+      if (manifest.title) { document.title = manifest.title; }
       launch();
     });
   }
