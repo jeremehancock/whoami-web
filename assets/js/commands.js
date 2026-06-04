@@ -80,6 +80,15 @@
     return out.join(" ");
   }
 
+  // Turn a shell glob (supporting * and ?) into an anchored RegExp.
+  function globToRe(glob, ci) {
+    var re = glob
+      .replace(/[.+^${}()|[\]\\]/g, "\\$&")
+      .replace(/\*/g, ".*")
+      .replace(/\?/g, ".");
+    return new RegExp("^" + re + "$", ci ? "i" : "");
+  }
+
   /* ------------------------------------------------------------------ *
    * the registry
    * ------------------------------------------------------------------ */
@@ -303,6 +312,98 @@
     },
   });
 
+  /* ---- find -------------------------------------------------------- */
+  def("find", {
+    group: "Getting around",
+    summary: "find files and directories by name",
+    usage: "find [path] [-name <glob>] [-type f|d]",
+    description:
+      "List everything under PATH (default: here), one path per line —\n" +
+      "the way `find` does on a real box. Narrow it down with:\n\n" +
+      "  -name <glob>    match the name against a glob (* and ? work)\n" +
+      "  -iname <glob>   like -name, but case-insensitive\n" +
+      "  -type f         files only\n" +
+      "  -type d         directories only\n\n" +
+      "Hidden dot-entries are skipped (same as `tree`).",
+    examples: "find\nfind projects -name \"*.md\"\nfind ~ -type d",
+    see: "tree, ls, grep",
+    run: function (ctx) {
+      var start = null,
+        nameRe = null,
+        typeF = null,
+        err = null,
+        i;
+      for (i = 0; i < ctx.args.length; i++) {
+        var a = ctx.args[i];
+        if (a === "-name" || a === "-iname") {
+          var g = ctx.args[++i];
+          if (g === undefined) {
+            err = "find: missing argument to `" + a + "'";
+            break;
+          }
+          nameRe = globToRe(g, a === "-iname");
+        } else if (a === "-type") {
+          var t = ctx.args[++i];
+          if (t !== "f" && t !== "d") {
+            err = "find: -type expects `f' or `d'";
+            break;
+          }
+          typeF = t;
+        } else if (a.charAt(0) === "-" && a.length > 1) {
+          err = "find: unknown predicate `" + a + "'";
+          break;
+        } else if (start === null) {
+          start = a;
+        }
+      }
+      if (err) {
+        return c.red(err);
+      }
+      if (start === null) {
+        start = ".";
+      }
+
+      var r = FS.resolve(ctx.term.cwd, start);
+      if (!r.ok) {
+        return c.red("find: '" + start + "': No such file or directory");
+      }
+
+      function keep(name, isDir) {
+        if (typeF === "f" && isDir) {
+          return false;
+        }
+        if (typeF === "d" && !isDir) {
+          return false;
+        }
+        return !nameRe || nameRe.test(name);
+      }
+
+      var out = [];
+      (function emit(node, dispPath, name) {
+        var isDir = node.type === "dir";
+        if (keep(name, isDir)) {
+          out.push(paintEntry(dispPath, node, false));
+        }
+        if (isDir) {
+          Object.keys(node.children)
+            .filter(function (n) {
+              return n.charAt(0) !== ".";
+            })
+            .sort()
+            .forEach(function (n) {
+              emit(
+                node.children[n],
+                dispPath.replace(/\/+$/, "") + "/" + n,
+                n,
+              );
+            });
+        }
+      })(r.node, start, r.parts.length ? r.parts[r.parts.length - 1] : "/");
+
+      return out.length ? out.join("\n") : undefined;
+    },
+  });
+
   /* ---- cat --------------------------------------------------------- */
   def("cat", {
     group: "Reading",
@@ -331,6 +432,158 @@
         out.push(U.linkify(U.esc(r.node.content)));
       });
       return out.join("\n");
+    },
+  });
+
+  /* ---- grep -------------------------------------------------------- */
+  def("grep", {
+    group: "Reading",
+    summary: "search for text in files",
+    usage: "grep [-i] [-n] [-r] <pattern> <file...>",
+    description:
+      "Search the named FILEs for lines matching PATTERN and print them,\n" +
+      "with the matches highlighted. PATTERN is a regular expression (a\n" +
+      "plain word works fine too).\n\n" +
+      "  -i   ignore case\n" +
+      "  -n   prefix each match with its line number\n" +
+      "  -r   search directories recursively\n\n" +
+      "Without -r, grepping a directory is an error — just like the real\n" +
+      "thing. Hidden dot-entries are skipped when recursing.",
+    examples: "grep tinker about/bio.txt\ngrep -ri plex projects\ngrep -n link projects/clix.md",
+    see: "cat, find",
+    run: function (ctx) {
+      var ignore = false,
+        number = false,
+        recursive = false,
+        operands = [],
+        onlyOperands = false,
+        i;
+      for (i = 0; i < ctx.args.length; i++) {
+        var a = ctx.args[i];
+        if (!onlyOperands && a === "--") {
+          onlyOperands = true;
+        } else if (!onlyOperands && a.charAt(0) === "-" && a.length > 1) {
+          if (a.indexOf("i") > -1) {
+            ignore = true;
+          }
+          if (a.indexOf("n") > -1) {
+            number = true;
+          }
+          if (a.indexOf("r") > -1 || a.indexOf("R") > -1) {
+            recursive = true;
+          }
+        } else {
+          operands.push(a);
+        }
+      }
+      var usage = c.dim("usage: grep [-i] [-n] [-r] <pattern> <file...>");
+      if (!operands.length) {
+        return c.red("grep: missing pattern") + "\n" + usage;
+      }
+      var pattern = operands.shift();
+      if (!operands.length) {
+        return c.red("grep: missing file operand") + "\n" + usage;
+      }
+
+      var re;
+      try {
+        re = new RegExp(pattern, "g" + (ignore ? "i" : ""));
+      } catch (e) {
+        // not a valid regex -> treat the pattern as a literal string
+        re = new RegExp(
+          pattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+          "g" + (ignore ? "i" : ""),
+        );
+      }
+      var emptyPat = pattern === "";
+
+      // Highlight every match in a line; returns HTML, or null if no match.
+      function hi(line) {
+        re.lastIndex = 0;
+        var html = "",
+          last = 0,
+          found = false,
+          m;
+        while ((m = re.exec(line)) !== null) {
+          found = true;
+          html +=
+            U.esc(line.slice(last, m.index)) +
+            U.wrap(U.wrap(U.esc(m[0]), "clr-accent"), "bold");
+          last = m.index + m[0].length;
+          if (m.index === re.lastIndex) {
+            re.lastIndex++; // never get stuck on a zero-width match
+          }
+        }
+        return found ? html + U.esc(line.slice(last)) : null;
+      }
+
+      // Gather files under a directory, skipping dot-entries, in path order.
+      function collect(node, base, into) {
+        Object.keys(node.children)
+          .filter(function (n) {
+            return n.charAt(0) !== ".";
+          })
+          .sort()
+          .forEach(function (n) {
+            var ch = node.children[n];
+            var p = base.replace(/\/+$/, "") + "/" + n;
+            if (ch.type === "dir") {
+              collect(ch, p, into);
+            } else {
+              into.push({ label: p, content: ch.content });
+            }
+          });
+      }
+
+      // Pass 1: turn each target into ordered units (errors + file sources).
+      var units = [],
+        fileCount = 0;
+      operands.forEach(function (target) {
+        var r = FS.resolve(ctx.term.cwd, target);
+        if (!r.ok) {
+          units.push({ error: notFound("grep", target) });
+        } else if (r.node.type === "dir") {
+          if (!recursive) {
+            units.push({ error: c.red("grep: " + target + ": Is a directory") });
+          } else {
+            var files = [];
+            collect(r.node, target, files);
+            files.forEach(function (f) {
+              units.push(f);
+              fileCount++;
+            });
+          }
+        } else {
+          units.push({ label: target, content: r.node.content });
+          fileCount++;
+        }
+      });
+
+      // Pass 2: print errors and matching lines in order.
+      var showLabel = recursive || fileCount > 1;
+      var out = [];
+      units.forEach(function (u) {
+        if (u.error) {
+          out.push(u.error);
+          return;
+        }
+        u.content.split("\n").forEach(function (line, idx) {
+          var h = emptyPat ? U.esc(line) : hi(line);
+          if (h === null) {
+            return;
+          }
+          var prefix = "";
+          if (showLabel) {
+            prefix += c.magenta(u.label) + c.dim(":");
+          }
+          if (number) {
+            prefix += c.green("" + (idx + 1)) + c.dim(":");
+          }
+          out.push(prefix + h);
+        });
+      });
+
+      return out.length ? out.join("\n") : undefined;
     },
   });
 
