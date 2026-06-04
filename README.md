@@ -29,6 +29,10 @@ dependencies** — just open the file (or drop it on any static host).
   (try `theme amber`; your pick is remembered).
 - 🥚  **Easter eggs** — `sudo`, `cowsay`, `neofetch`, `vim`, and a `.secret/`
   worth finding.
+  
+## Screenshot
+
+![whoami screenshot](screenshot.png)
 
 ## Commands
 
