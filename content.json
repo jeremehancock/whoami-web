@@ -53,7 +53,7 @@
         "  * Tinkering with Plex/Jellyfin tools: CLIX, Ludanta, Posteria.",
         "  * Documenting the homelab and shipping the odd dumb project.",
         "",
-        "The fun stuff lives at dumbprojects.com."
+        "The fun stuff lives at https://dumbprojects.com"
       ]
     },
     "projects": {
@@ -70,7 +70,7 @@
         "  ai-game-collection.md  AI-powered games",
         "  random-goat.md         Random goat gifs",
         "",
-        "More at dumbprojects.com · github.com/jeremehancock"
+        "More at https://dumbprojects.com · https://github.com/jeremehancock"
       ],
       "clix.md": [
         "# CLIX",
@@ -151,7 +151,7 @@
         "      (|     | )  respect. since you're here, try these:",
         "     /'\\_   _/`\\",
         "     \\___)=(___/     cowsay · neofetch · theme amber",
-        "                     and poke around dumbprojects.com",
+        "                     and poke around https://dumbprojects.com",
         "",
         "  Curiosity is the whole job. Keep poking."
       ]
