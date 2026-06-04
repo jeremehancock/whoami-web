@@ -42,7 +42,7 @@
     // little terminal logo for `neofetch`
     logo: [
       " ______________ ",
-      "|  o o o       |",
+      "|        _ o x |",
       "|--------------|",
       "| $ whoami     |",
       "| > jereme     |",
