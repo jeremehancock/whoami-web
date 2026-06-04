@@ -10,6 +10,12 @@
   var c = U.color;
   var Commands = global.Commands;
 
+  // The name this shell reports in its own messages (errors, etc.). Mirrors
+  // content.json's profile.shell so renaming the shell only happens in one place.
+  function shellName() {
+    return (FS.PROFILE && FS.PROFILE.shell) || "jsh";
+  }
+
   var THEMES = ["default", "matrix", "amber", "dracula", "light"];
   var THEME_KEY = "whoami-theme";
 
@@ -429,7 +435,7 @@
     var ex = this._expandHistory(raw);
     if (ex && ex.error) {
       this.echoLine(raw);
-      this.write(c.red("jsh: " + U.esc(ex.token) + ": event not found"));
+      this.write(c.red(shellName() + ": " + U.esc(ex.token) + ": event not found"));
       this.histIndex = this.history.length;
       this.draft = "";
       this.renderPrompt();
@@ -504,7 +510,7 @@
     var spec = Commands[name];
     if (!spec) {
       this.write(
-        c.red("jsh: command not found: " + U.esc(name)) +
+        c.red(shellName() + ": command not found: " + U.esc(name)) +
           "\n" +
           c.dim("Type ") +
           c.green("help") +
@@ -523,7 +529,7 @@
     try {
       out = spec.run(ctx);
     } catch (err) {
-      out = c.red("jsh: " + name + ": internal error");
+      out = c.red(shellName() + ": " + name + ": internal error");
       if (global.console) {
         console.error(err);
       }
