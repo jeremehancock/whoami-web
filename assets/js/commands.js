@@ -1083,8 +1083,19 @@
       summary: "leave the shell",
       usage: "exit",
       description:
-        "Attempts to log out. There is no logging out of who you are.",
+        "On the desktop the terminal is a real window, so this closes it —\n" +
+        "the same as clicking the × in the title bar. Bring it back with the\n" +
+        "“> restart terminal” button. On mobile there's no window to close,\n" +
+        "so it just says its goodbyes.",
       run: function () {
+        // On desktop the terminal is a real window — exit it the same way the
+        // title-bar × button does. On mobile there's no window chrome, so fall
+        // back to the original playful "there's no escape" message.
+        var wm = global.wm;
+        if (wm && wm.isDesktop()) {
+          wm.close();
+          return undefined;
+        }
         return (
           c.dim("logout") +
           "\n" +
