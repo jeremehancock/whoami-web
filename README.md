@@ -39,8 +39,8 @@ dependencies** — just open the file (or drop it on any static host).
 | | |
 |---|---|
 | `whoami` | the short version of me |
-| `ls` · `cd` · `pwd` · `tree` | get around the filesystem |
-| `cat` | read any file |
+| `ls` · `cd` · `pwd` · `tree` · `find` | get around the filesystem |
+| `cat` · `grep` | read & search files |
 | `man` · `whatis` · `help` | figure out what everything does |
 | `neofetch` | the obligatory flex |
 | `theme` | change the colour scheme |
