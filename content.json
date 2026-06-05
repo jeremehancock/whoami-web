@@ -59,8 +59,8 @@
     },
     "projects": {
       "README.md": [
-        "projects/",
-        "=========",
+        "projects",
+        "========",
         "",
         "Things I've built. `cat` any of them for details:",
         "",
