@@ -19,7 +19,14 @@
       document.head.appendChild(base);
     })();
   </script>
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <!-- interactive-widget=resizes-content: when the on-screen keyboard opens,
+       shrink the *layout* viewport (so vh/dvh/% and the document itself get
+       smaller) instead of only the visual viewport. Without this, Android
+       Chrome keeps the layout viewport full-height and lets you pan the small
+       visible area down into the empty space below the keyboard. (Ignored by
+       browsers that don't support it, e.g. iOS Safari, which fall back to the
+       --vvh tracking in JS.) -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
   <!-- Generic fallback title; the real one is set from content.json at runtime
        (this shows pre-JS, with JS disabled, or when content.json can't load). -->
   <title>whoami</title>
