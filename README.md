@@ -30,8 +30,8 @@ __      _| |__   ___   __ _ _ __ ___ (_)
   (try `theme amber`; your pick is remembered).
 - 🔤  **`figlet`** — render any text as big ASCII letters in 7 bundled fonts
   (`figlet -f slant Hire me!`; run `figlet -l` to see them all).
-- 🥚  **Easter eggs** — `sudo`, `cowsay`, `neofetch`, `vim`, and a `.secret/`
-  worth finding.
+- 🥚  **Easter eggs** — `sudo`, `cowsay`, `neofetch`, `vim`, `sl` (mistype
+  `ls` and watch), and a `.secret/` worth finding.
   
 ## Screenshot
 
