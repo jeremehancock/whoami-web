@@ -326,7 +326,7 @@
       U.wrap(c.accent("whoami BIOS v2.6 — vanilla edition"), "bold"),
       c.dim("(c) 1994-" + year + "  No Frameworks, Inc.  All rights reserved."),
       "",
-      c.green("CPU") + c.dim("     : ") + "VanillaJS Core(tm) — 0 dependencies",
+      c.green("CPU") + c.dim("     : ") + U.cpu(),
       c.green("Memory") + c.dim("  : ") + c.accent("65536K") + c.dim(" OK"),
       c.green("Cache") + c.dim("   : ") + "L1 localStorage " + c.dim("(theme remembered)"),
       "",
@@ -336,7 +336,7 @@
       probe("Loading profile: " + name, "OK"),
       "",
       c.dim("Boot device: ") +
-        c.green("RESUME0") +
+        c.green("RAMEN0") +
         c.dim(" — starting ") +
         c.green(shellName()) +
         c.dim("..."),
@@ -711,9 +711,10 @@
   }
 
   /* ----- boot ------------------------------------------------------- */
-  // Optionally scroll a fake BIOS/POST, then reveal the MOTD line-by-line,
-  // then hand control to the user. A key or click skips straight to the
-  // prompt. Pass { post: false } to skip the boot screen (a soft reset).
+  // Optionally scroll a fake BIOS/POST; then — as if POST finished and the OS
+  // took over — wipe the boot screen and load the terminal: reveal the MOTD
+  // line-by-line and hand control to the user. A key or click skips straight
+  // to the loaded terminal. Pass { post: false } to skip the boot screen.
   Terminal.prototype.boot = function (opts) {
     var self = this;
     var withPost = !(opts && opts.post === false);
@@ -722,44 +723,10 @@
     this.renderInput();
     this.focus();
 
-    var post = withPost ? this.postLines() : [];
     var banner = this.motdBannerLines();
     var lines = this.motdTextLines();
+    var skipped = false;
 
-    // DOM order top-to-bottom: POST scroll (if any), then banner, then text.
-    var postBox = post.length ? this.write("", "post") : null; // boot log
-    var artBox = this.write("", "art"); // banner: doesn't wrap, fits to width
-    var txtBox = this.write(""); // welcome text: wraps normally
-
-    // One flat reveal timeline; each step carries its own delay so the POST
-    // can rattle by quickly while the banner takes its time.
-    var steps = [];
-    post.forEach(function (_, n) {
-      steps.push({ box: postBox, html: post.slice(0, n + 1).join("\n"), delay: 24 });
-    });
-    if (steps.length) {
-      // a real machine sits on the last POST line for a beat, "loading the
-      // OS", before the banner appears — that pause sells the boot
-      steps[steps.length - 1].delay = 1000;
-    }
-    banner.forEach(function (_, n) {
-      steps.push({ box: artBox, html: banner.slice(0, n + 1).join("\n"), delay: 55 });
-    });
-    lines.forEach(function (_, n) {
-      steps.push({ box: txtBox, html: lines.slice(0, n + 1).join("\n"), delay: 28 });
-    });
-
-    var i = 0,
-      skipped = false;
-
-    function dump() {
-      if (postBox) {
-        postBox.innerHTML = post.join("\n");
-      }
-      artBox.innerHTML = banner.join("\n");
-      txtBox.innerHTML = lines.join("\n");
-      finish();
-    }
     function finish() {
       if (self.ready) {
         return;
@@ -773,6 +740,46 @@
       global.removeEventListener("keydown", skip, true);
       self.els.root.removeEventListener("mousedown", skip, true);
     }
+
+    // The end state: a freshly loaded terminal — the MOTD on a clean screen.
+    // animated=false fills it instantly (used by skip / reduced-motion).
+    function loadTerminal(animated) {
+      var artBox = self.write("", "art"); // banner: doesn't wrap, fits width
+      var txtBox = self.write(""); // welcome text: wraps normally
+      if (!animated) {
+        artBox.innerHTML = banner.join("\n");
+        txtBox.innerHTML = lines.join("\n");
+        finish();
+        return;
+      }
+      var steps = [];
+      banner.forEach(function (_, n) {
+        steps.push({ box: artBox, html: banner.slice(0, n + 1).join("\n"), delay: 55 });
+      });
+      lines.forEach(function (_, n) {
+        steps.push({ box: txtBox, html: lines.slice(0, n + 1).join("\n"), delay: 28 });
+      });
+      var i = 0;
+      (function tick() {
+        if (skipped) {
+          return;
+        }
+        if (i >= steps.length) {
+          finish();
+          return;
+        }
+        steps[i].box.innerHTML = steps[i].html;
+        self.scroll();
+        i++;
+        setTimeout(tick, steps[i - 1].delay);
+      })();
+    }
+
+    // Skip: jump straight to the loaded terminal (boot screen wiped).
+    function dump() {
+      self.clearScreen();
+      loadTerminal(false);
+    }
     function skip() {
       if (skipped) {
         return;
@@ -781,24 +788,49 @@
       dump();
     }
 
-    // Reduced-motion: show it all at once, no reveal, no skip handlers needed.
+    // Reduced motion: no animation — just the loaded terminal.
     if (prefersReducedMotion()) {
-      dump();
+      self.clearScreen();
+      loadTerminal(false);
       return;
     }
 
     global.addEventListener("keydown", skip, true);
     this.els.root.addEventListener("mousedown", skip, true);
 
+    if (!withPost) {
+      // Soft reset: no boot screen, just (re)load the terminal.
+      loadTerminal(true);
+      return;
+    }
+
+    // Boot screen: rattle the POST log out, sit on the last line a beat, then —
+    // as if the machine finished POST and handed off — wipe it and load the OS.
+    var post = this.postLines();
+    var postBox = this.write("", "post");
+    var steps = [];
+    post.forEach(function (_, n) {
+      steps.push({ html: post.slice(0, n + 1).join("\n"), delay: 24 });
+    });
+    if (steps.length) {
+      steps[steps.length - 1].delay = 1000;
+    }
+    var i = 0;
     (function tick() {
       if (skipped) {
         return;
       }
       if (i >= steps.length) {
-        finish();
+        self.clearScreen(); // POST done -> wipe the boot screen
+        setTimeout(function () {
+          // a brief black screen, then the OS loads
+          if (!skipped) {
+            loadTerminal(true);
+          }
+        }, 250);
         return;
       }
-      steps[i].box.innerHTML = steps[i].html;
+      postBox.innerHTML = steps[i].html;
       self.scroll();
       i++;
       setTimeout(tick, steps[i - 1].delay);

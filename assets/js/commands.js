@@ -776,10 +776,7 @@
         field("Uptime", fmtUptime(Date.now() - ctx.term.bootTime)),
         field("Resolution", window.innerWidth + "x" + window.innerHeight),
         field("Theme", ctx.term.themeName),
-        field(
-          "CPU",
-          "Caffeine @ " + (new Date().getHours() < 12 ? "low" : "high"),
-        ),
+        field("CPU", U.cpu()),
         "",
         [
           "clr-red",

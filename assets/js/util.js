@@ -91,6 +91,12 @@
     return s;
   }
 
+  /* The tongue-in-cheek "CPU" — caffeine level by time of day. Shared by
+     neofetch and the boot screen so the two always report the same thing. */
+  function cpu() {
+    return 'Caffeine @ ' + (new Date().getHours() < 12 ? 'low' : 'high');
+  }
+
   global.U = {
     esc: esc,
     wrap: wrap,
@@ -98,6 +104,7 @@
     c: color,
     linkify: linkify,
     tokenize: tokenize,
-    pad: pad
+    pad: pad,
+    cpu: cpu
   };
 })(window);
