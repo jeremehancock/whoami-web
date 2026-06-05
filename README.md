@@ -21,7 +21,7 @@ __      _| |__   ___   __ _ _ __ ___ (_)
   coloured output, scanlines on the retro themes.
 - ⚡ **Boots like one too** — a tongue-in-cheek BIOS/POST scroll plays on a
   blank screen, then the terminal window appears and loads the welcome banner
-  (any key or click skips it; honours reduced-motion).
+  (plays through in full; honours reduced-motion).
 - 📂 **A virtual filesystem** you actually walk through with `ls` / `cd` / `cat`
   (relative paths, `..`, `~`, and `/` all work).
 - 📖 **`man` pages** and `whatis` for every built-in command.

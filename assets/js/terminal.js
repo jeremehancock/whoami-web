@@ -716,8 +716,8 @@
   // just like a real machine booting. When POST finishes the console goes dark
   // for a beat, then the terminal window appears and the MOTD loads into it.
   // With { post: false } (a soft `reset`) there's no blank screen at all: the
-  // MOTD just reloads in the window that's already on screen. A key or click
-  // skips straight to the loaded terminal.
+  // MOTD just reloads in the window that's already on screen. The sequence
+  // always plays out in full — it can't be skipped.
   Terminal.prototype.boot = function (opts) {
     var self = this;
     var withPost = !(opts && opts.post === false);
@@ -728,27 +728,21 @@
 
     var banner = this.motdBannerLines();
     var lines = this.motdTextLines();
-    var skipped = false;
 
     function finish() {
       if (self.ready) {
         return;
       }
       self.ready = true;
-      // a key used to skip the intro shouldn't leak into the prompt
+      // discard anything typed during boot so it doesn't leak into the prompt
       self.els.input.value = "";
       self.renderInput();
       self.scroll();
       self.focus();
-      global.removeEventListener("keydown", skip, true);
-      self.els.root.removeEventListener("mousedown", skip, true);
-      if (self.els.bootscreen) {
-        self.els.bootscreen.removeEventListener("mousedown", skip, true);
-      }
     }
 
     // The end state: a freshly loaded terminal — the MOTD on a clean screen.
-    // animated=false fills it instantly (used by skip / reduced-motion).
+    // animated=false fills it instantly (used by reduced motion).
     function loadTerminal(animated) {
       var artBox = self.write("", "art"); // banner: doesn't wrap, fits width
       var txtBox = self.write(""); // welcome text: wraps normally
@@ -767,9 +761,6 @@
       });
       var i = 0;
       (function tick() {
-        if (skipped) {
-          return;
-        }
         if (i >= steps.length) {
           finish();
           return;
@@ -781,32 +772,12 @@
       })();
     }
 
-    // Skip: dismiss the blank screen (if any) and jump to the loaded terminal.
-    function dump() {
-      self._hideBootScreen();
-      self.clearScreen();
-      loadTerminal(false);
-    }
-    function skip() {
-      if (skipped) {
-        return;
-      }
-      skipped = true;
-      dump();
-    }
-
     // Reduced motion: no animation, no blank screen — just the loaded terminal.
     if (prefersReducedMotion()) {
       self._hideBootScreen();
       self.clearScreen();
       loadTerminal(false);
       return;
-    }
-
-    global.addEventListener("keydown", skip, true);
-    this.els.root.addEventListener("mousedown", skip, true);
-    if (this.els.bootscreen) {
-      this.els.bootscreen.addEventListener("mousedown", skip, true);
     }
 
     if (!withPost) {
@@ -838,21 +809,13 @@
     }
     var i = 0;
     (function tick() {
-      if (skipped) {
-        return;
-      }
       if (i >= steps.length) {
         bootBox.innerHTML = ""; // POST done -> the console goes dark
         setTimeout(function () {
-          // a black-screen beat, like a real machine handing off to the OS
-          if (skipped) {
-            return;
-          }
-          // the window appears (console fades away), then the MOTD loads in
+          // a black-screen beat, like a real machine handing off to the OS;
+          // then the window appears (console fades away) and the MOTD loads in
           self._revealTerminal(function () {
-            if (!skipped) {
-              loadTerminal(true);
-            }
+            loadTerminal(true);
           });
         }, 550);
         return;
@@ -906,8 +869,8 @@
     setTimeout(settle, 600);
   };
 
-  // Drop the boot console immediately, no fade (used when the user skips, on a
-  // soft reset, and for reduced motion).
+  // Drop the boot console immediately, no fade (used on a soft reset and for
+  // reduced motion).
   Terminal.prototype._hideBootScreen = function () {
     var bs = this.els.bootscreen;
     if (!bs) {
