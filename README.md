@@ -31,8 +31,10 @@ __      _| |__   ___   __ _ _ __ ___ (_)
   (try `theme amber`; your pick is remembered).
 - 🔤 **`figlet`** — render any text as big ASCII letters in 7 bundled fonts
   (`figlet -f slant Hire me!`; run `figlet -l` to see them all).
+- 🌈 **`lolcat`** — pour a rainbow over any text; pairs with figlet
+  (`figlet Hire me! | lolcat`).
 - 🔧 **Pipes** — chain commands with `|`, just like a real shell
-  (`cat projects/README.md | grep -i plex`, or `figlet hi | cat`).
+  (`figlet hi | lolcat`, or `cat projects/README.md | grep -i plex`).
 - 🥚 **Easter eggs** — try some things and see what you find. 😁
 
 ## Screenshot
@@ -50,7 +52,7 @@ __      _| |__   ___   __ _ _ __ ___ (_)
 | `neofetch`                                                          | the obligatory flex             |
 | `theme`                                                             | change the colour scheme        |
 | `echo` · `date` · `history` · `uname` · `uptime` · `clear` · `motd` | the usual suspects              |
-| `cowsay` · `banner` · `figlet` · `sudo` · `vim` …                   | for fun                         |
+| `cowsay` · `banner` · `figlet` · `lolcat` · `sudo` · `vim` …        | for fun                         |
 
 Type `help` in the terminal for the full list, or `man <command>` for details.
 

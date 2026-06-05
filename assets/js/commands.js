@@ -1062,7 +1062,7 @@
       "figlet -f slant Hire me!\n" +
       "figlet -f banner whoami\n" +
       "figlet -l",
-    see: "banner, cowsay",
+    see: "banner, cowsay, lolcat",
     run: function (ctx) {
       if (!Figlet) {
         return c.red("figlet: renderer unavailable");
@@ -1120,13 +1120,81 @@
     },
   });
 
+  /* ---- lolcat ------------------------------------------------------ */
+  // The same sine-wave RGB the real `lolcat` uses: each column nudges the hue
+  // a little and each row offsets it, so the colours run in soft diagonal
+  // bands. freq sets how fast the rainbow cycles across a line.
+  function rainbow(i) {
+    var freq = 0.1;
+    var r = Math.round(Math.sin(freq * i + 0) * 127 + 128);
+    var g = Math.round(Math.sin(freq * i + (2 * Math.PI) / 3) * 127 + 128);
+    var b = Math.round(Math.sin(freq * i + (4 * Math.PI) / 3) * 127 + 128);
+    return "rgb(" + r + "," + g + "," + b + ")";
+  }
+
+  def("lolcat", {
+    group: "Fun",
+    summary: "rainbow-colour text",
+    usage: "lolcat [text...]",
+    description:
+      "Pour a rainbow over whatever you give it. Pipe text in\n" +
+      "(`figlet hi | lolcat`), pass it as arguments (`lolcat hello`),\n" +
+      "or run it bare for a splash of colour. Made for pairing with\n" +
+      "`figlet` and `cowsay`.",
+    examples:
+      "lolcat hello world\n" +
+      "figlet Hire me! | lolcat\n" +
+      "cat projects/clix.md | lolcat",
+    see: "figlet, cowsay, cat",
+    run: function (ctx) {
+      // Colour piped input first; else the arguments; else a cheery default.
+      var input;
+      if (ctx.stdin != null) {
+        input = ctx.stdin;
+      } else if (ctx.rawArgs) {
+        input = ctx.rawArgs;
+      } else {
+        input = "i can haz colors?";
+      }
+      if (input === "") {
+        return undefined; // piped in but empty -> print nothing, like a real pipe
+      }
+      // A fresh seed each run so the same text isn't coloured the same twice.
+      var seed = Math.floor(Math.random() * 256);
+      var spread = 3.0;
+      var html = input
+        .split("\n")
+        .map(function (line, row) {
+          var base = seed + row * spread;
+          var s = "";
+          for (var col = 0; col < line.length; col++) {
+            var ch = line.charAt(col);
+            if (ch === " ") {
+              s += " "; // leave spaces unpainted but still advancing the hue
+            } else {
+              s +=
+                '<span style="color:' +
+                rainbow(base + col) +
+                '">' +
+                U.esc(ch) +
+                "</span>";
+            }
+          }
+          return s;
+        })
+        .join("\n");
+      return art(html);
+    },
+  });
+
   /* ---- cowsay ------------------------------------------------------ */
   def("cowsay", {
     group: "Fun",
     summary: "a cow says something",
     usage: "cowsay [text...]",
     description: "An ASCII cow speaks your mind. A unix rite of passage.",
-    examples: "cowsay moo\ncowsay hire this developer",
+    examples: "cowsay moo\ncowsay hire this developer\ncowsay moo | lolcat",
+    see: "figlet, lolcat",
     run: function (ctx) {
       var msg = ctx.args.join(" ") || "mooo";
       var top = " " + "_".repeat(msg.length + 2);
