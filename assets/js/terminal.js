@@ -711,10 +711,13 @@
   }
 
   /* ----- boot ------------------------------------------------------- */
-  // Optionally scroll a fake BIOS/POST; then — as if POST finished and the OS
-  // took over — wipe the boot screen and load the terminal: reveal the MOTD
-  // line-by-line and hand control to the user. A key or click skips straight
-  // to the loaded terminal. Pass { post: false } to skip the boot screen.
+  // Power-on sequence. With the boot screen (a fresh load or `reboot`), the
+  // BIOS/POST log scrolls on a blank, full-screen console — no window chrome,
+  // just like a real machine booting. When POST finishes the console goes dark
+  // for a beat, then the terminal window appears and the MOTD loads into it.
+  // With { post: false } (a soft `reset`) there's no blank screen at all: the
+  // MOTD just reloads in the window that's already on screen. The sequence
+  // always plays out in full — it can't be skipped.
   Terminal.prototype.boot = function (opts) {
     var self = this;
     var withPost = !(opts && opts.post === false);
@@ -725,24 +728,21 @@
 
     var banner = this.motdBannerLines();
     var lines = this.motdTextLines();
-    var skipped = false;
 
     function finish() {
       if (self.ready) {
         return;
       }
       self.ready = true;
-      // a key used to skip the intro shouldn't leak into the prompt
+      // discard anything typed during boot so it doesn't leak into the prompt
       self.els.input.value = "";
       self.renderInput();
       self.scroll();
       self.focus();
-      global.removeEventListener("keydown", skip, true);
-      self.els.root.removeEventListener("mousedown", skip, true);
     }
 
     // The end state: a freshly loaded terminal — the MOTD on a clean screen.
-    // animated=false fills it instantly (used by skip / reduced-motion).
+    // animated=false fills it instantly (used by reduced motion).
     function loadTerminal(animated) {
       var artBox = self.write("", "art"); // banner: doesn't wrap, fits width
       var txtBox = self.write(""); // welcome text: wraps normally
@@ -761,9 +761,6 @@
       });
       var i = 0;
       (function tick() {
-        if (skipped) {
-          return;
-        }
         if (i >= steps.length) {
           finish();
           return;
@@ -775,39 +772,33 @@
       })();
     }
 
-    // Skip: jump straight to the loaded terminal (boot screen wiped).
-    function dump() {
-      self.clearScreen();
-      loadTerminal(false);
-    }
-    function skip() {
-      if (skipped) {
-        return;
-      }
-      skipped = true;
-      dump();
-    }
-
-    // Reduced motion: no animation — just the loaded terminal.
+    // Reduced motion: no animation, no blank screen — just the loaded terminal.
     if (prefersReducedMotion()) {
+      self._hideBootScreen();
       self.clearScreen();
       loadTerminal(false);
       return;
     }
 
-    global.addEventListener("keydown", skip, true);
-    this.els.root.addEventListener("mousedown", skip, true);
-
     if (!withPost) {
-      // Soft reset: no boot screen, just (re)load the terminal.
+      // Soft reset: no blank screen, just (re)load the terminal in place.
+      self._hideBootScreen();
       loadTerminal(true);
       return;
     }
 
-    // Boot screen: rattle the POST log out, sit on the last line a beat, then —
-    // as if the machine finished POST and handed off — wipe it and load the OS.
+    // Boot screen: keep the terminal window empty and hidden while the POST log
+    // rattles out on the blank full-screen console. Sit on the last line a beat
+    // so it can be read, blank the console, then hand off — the window appears
+    // and the MOTD loads into it.
+    this.clearScreen();
+    var bootBox = this._showBootScreen();
+    if (!bootBox) {
+      // No console element to draw on (shouldn't happen) — load in-window.
+      loadTerminal(true);
+      return;
+    }
     var post = this.postLines();
-    var postBox = this.write("", "post");
     var steps = [];
     post.forEach(function (_, n) {
       steps.push({ html: post.slice(0, n + 1).join("\n"), delay: 24 });
@@ -818,24 +809,76 @@
     }
     var i = 0;
     (function tick() {
-      if (skipped) {
-        return;
-      }
       if (i >= steps.length) {
-        self.clearScreen(); // POST done -> wipe the boot screen
+        bootBox.innerHTML = ""; // POST done -> the console goes dark
         setTimeout(function () {
-          // a black screen beat, like a real machine handing off to the OS
-          if (!skipped) {
+          // a black-screen beat, like a real machine handing off to the OS;
+          // then the window appears (console fades away) and the MOTD loads in
+          self._revealTerminal(function () {
             loadTerminal(true);
-          }
-        }, 650);
+          });
+        }, 550);
         return;
       }
-      postBox.innerHTML = steps[i].html;
-      self.scroll();
+      bootBox.innerHTML = steps[i].html;
+      bootBox.scrollTop = bootBox.scrollHeight; // keep the latest line in view
       i++;
       setTimeout(tick, steps[i - 1].delay);
     })();
+  };
+
+  /* ----- boot console (the blank screen before the window) ---------- */
+  // Show the full-screen boot console and return the element to draw the POST
+  // log into. The terminal window sits hidden behind it until reveal.
+  Terminal.prototype._showBootScreen = function () {
+    var bs = this.els.bootscreen;
+    if (!bs) {
+      return null;
+    }
+    bs.classList.remove("is-hiding");
+    bs.innerHTML = "";
+    bs.hidden = false;
+    return bs;
+  };
+
+  // Fade the boot console away to reveal the terminal window, then call `done`.
+  // Falls back to a timer in case the CSS transition never fires.
+  Terminal.prototype._revealTerminal = function (done) {
+    var bs = this.els.bootscreen;
+    if (!bs || bs.hidden) {
+      if (done) {
+        done();
+      }
+      return;
+    }
+    var settled = false;
+    function settle() {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      bs.removeEventListener("transitionend", settle);
+      bs.hidden = true;
+      bs.classList.remove("is-hiding");
+      if (done) {
+        done();
+      }
+    }
+    bs.addEventListener("transitionend", settle);
+    bs.classList.add("is-hiding");
+    setTimeout(settle, 600);
+  };
+
+  // Drop the boot console immediately, no fade (used on a soft reset and for
+  // reduced motion).
+  Terminal.prototype._hideBootScreen = function () {
+    var bs = this.els.bootscreen;
+    if (!bs) {
+      return;
+    }
+    bs.classList.remove("is-hiding");
+    bs.innerHTML = "";
+    bs.hidden = true;
   };
 
   // Tear the session back down to a just-opened state — clear everything, go
