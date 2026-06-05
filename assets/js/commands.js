@@ -420,11 +420,17 @@
     usage: "cat <file> [file...]",
     description:
       "Dump one or more files to the screen. This is how you read\n" +
-      "everything on the site.",
-    examples: "cat README.md\ncat about/bio.txt",
-    see: "ls, cd",
+      "everything on the site.\n\n" +
+      "With no file given but input piped in, cat prints that input —\n" +
+      "so it works as the tail end of a pipe (e.g. `figlet hi | cat`).",
+    examples: "cat README.md\ncat about/bio.txt\nfiglet hi | cat",
+    see: "ls, cd, grep",
     run: function (ctx) {
       if (!ctx.args.length) {
+        // No files, but piped input -> behave like `cat` reading stdin.
+        if (ctx.stdin != null) {
+          return U.linkify(U.esc(ctx.stdin));
+        }
         return c.red("cat: missing file operand");
       }
       var out = [];
@@ -460,9 +466,11 @@
       "With -l you get one filename per matching file and nothing else (so\n" +
       "-n has no effect). Without -r, grepping a directory is an error —\n" +
       "just like the real thing. Hidden dot-entries are skipped when\n" +
-      "recursing.",
+      "recursing.\n\n" +
+      "With no FILE but input piped in, grep searches that input instead —\n" +
+      "so it filters the output of another command (e.g. the example below).",
     examples:
-      "grep tinker about/bio.txt\ngrep -ri plex projects\ngrep -rl tinker ~\ngrep -n link projects/clix.md",
+      "grep tinker about/bio.txt\ngrep -ri plex projects\ngrep -rl tinker ~\ngrep -n link projects/clix.md\ncat projects/README.md | grep -i plex",
     see: "cat, find",
     run: function (ctx) {
       var ignore = false,
@@ -498,8 +506,14 @@
         return c.red("grep: missing pattern") + "\n" + usage;
       }
       var pattern = operands.shift();
+      // A pattern with no files greps the pipe (stdin), if there is one.
+      var stdinUnit = null;
       if (!operands.length) {
-        return c.red("grep: missing file operand") + "\n" + usage;
+        if (ctx.stdin != null) {
+          stdinUnit = { label: "(standard input)", content: ctx.stdin };
+        } else {
+          return c.red("grep: missing file operand") + "\n" + usage;
+        }
       }
 
       var re;
@@ -559,30 +573,35 @@
       }
 
       // Pass 1: turn each target into ordered units (errors + file sources).
+      // With piped input and no files, the pipe is the one and only source.
       var units = [],
         fileCount = 0;
-      operands.forEach(function (target) {
-        var r = FS.resolve(ctx.term.cwd, target);
-        if (!r.ok) {
-          units.push({ error: notFound("grep", target) });
-        } else if (r.node.type === "dir") {
-          if (!recursive) {
-            units.push({
-              error: c.red("grep: " + target + ": Is a directory"),
-            });
+      if (stdinUnit) {
+        units.push(stdinUnit);
+      } else {
+        operands.forEach(function (target) {
+          var r = FS.resolve(ctx.term.cwd, target);
+          if (!r.ok) {
+            units.push({ error: notFound("grep", target) });
+          } else if (r.node.type === "dir") {
+            if (!recursive) {
+              units.push({
+                error: c.red("grep: " + target + ": Is a directory"),
+              });
+            } else {
+              var files = [];
+              collect(r.node, target, files);
+              files.forEach(function (f) {
+                units.push(f);
+                fileCount++;
+              });
+            }
           } else {
-            var files = [];
-            collect(r.node, target, files);
-            files.forEach(function (f) {
-              units.push(f);
-              fileCount++;
-            });
+            units.push({ label: target, content: r.node.content });
+            fileCount++;
           }
-        } else {
-          units.push({ label: target, content: r.node.content });
-          fileCount++;
-        }
-      });
+        });
+      }
 
       // Pass 2: print results. With -l, list each matching file once;
       // otherwise print the matching lines in order.
@@ -1043,7 +1062,7 @@
       "figlet -f slant Hire me!\n" +
       "figlet -f banner whoami\n" +
       "figlet -l",
-    see: "banner, cowsay",
+    see: "banner, cowsay, lolcat",
     run: function (ctx) {
       if (!Figlet) {
         return c.red("figlet: renderer unavailable");
@@ -1101,13 +1120,81 @@
     },
   });
 
+  /* ---- lolcat ------------------------------------------------------ */
+  // The same sine-wave RGB the real `lolcat` uses: each column nudges the hue
+  // a little and each row offsets it, so the colours run in soft diagonal
+  // bands. freq sets how fast the rainbow cycles across a line.
+  function rainbow(i) {
+    var freq = 0.1;
+    var r = Math.round(Math.sin(freq * i + 0) * 127 + 128);
+    var g = Math.round(Math.sin(freq * i + (2 * Math.PI) / 3) * 127 + 128);
+    var b = Math.round(Math.sin(freq * i + (4 * Math.PI) / 3) * 127 + 128);
+    return "rgb(" + r + "," + g + "," + b + ")";
+  }
+
+  def("lolcat", {
+    group: "Fun",
+    summary: "rainbow-colour text",
+    usage: "lolcat [text...]",
+    description:
+      "Pour a rainbow over whatever you give it. Pipe text in\n" +
+      "(`figlet hi | lolcat`), pass it as arguments (`lolcat hello`),\n" +
+      "or run it bare for a splash of colour. Made for pairing with\n" +
+      "`figlet` and `cowsay`.",
+    examples:
+      "lolcat hello world\n" +
+      "figlet Hire me! | lolcat\n" +
+      "cat projects/clix.md | lolcat",
+    see: "figlet, cowsay, cat",
+    run: function (ctx) {
+      // Colour piped input first; else the arguments; else a cheery default.
+      var input;
+      if (ctx.stdin != null) {
+        input = ctx.stdin;
+      } else if (ctx.rawArgs) {
+        input = ctx.rawArgs;
+      } else {
+        input = "i can haz colors?";
+      }
+      if (input === "") {
+        return undefined; // piped in but empty -> print nothing, like a real pipe
+      }
+      // A fresh seed each run so the same text isn't coloured the same twice.
+      var seed = Math.floor(Math.random() * 256);
+      var spread = 3.0;
+      var html = input
+        .split("\n")
+        .map(function (line, row) {
+          var base = seed + row * spread;
+          var s = "";
+          for (var col = 0; col < line.length; col++) {
+            var ch = line.charAt(col);
+            if (ch === " ") {
+              s += " "; // leave spaces unpainted but still advancing the hue
+            } else {
+              s +=
+                '<span style="color:' +
+                rainbow(base + col) +
+                '">' +
+                U.esc(ch) +
+                "</span>";
+            }
+          }
+          return s;
+        })
+        .join("\n");
+      return art(html);
+    },
+  });
+
   /* ---- cowsay ------------------------------------------------------ */
   def("cowsay", {
     group: "Fun",
     summary: "a cow says something",
     usage: "cowsay [text...]",
     description: "An ASCII cow speaks your mind. A unix rite of passage.",
-    examples: "cowsay moo\ncowsay hire this developer",
+    examples: "cowsay moo\ncowsay hire this developer\ncowsay moo | lolcat",
+    see: "figlet, lolcat",
     run: function (ctx) {
       var msg = ctx.args.join(" ") || "mooo";
       var top = " " + "_".repeat(msg.length + 2);
