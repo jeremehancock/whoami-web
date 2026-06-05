@@ -26,6 +26,8 @@ __      _| |__   ___   __ _ _ __ ___ (_)
   `↑`/`↓` history, and `Ctrl+L` / `Ctrl+C` / `Ctrl+U` / `Ctrl+A` / `Ctrl+E`.
 - 🎨  **5 themes** — `default`, `matrix`, `amber`, `dracula`, `light`
   (try `theme amber`; your pick is remembered).
+- 🔤  **`figlet`** — render any text as big ASCII letters in 7 bundled fonts
+  (`figlet -f slant Hire me!`; run `figlet -l` to see them all).
 - 🥚  **Easter eggs** — `sudo`, `cowsay`, `neofetch`, `vim`, and a `.secret/`
   worth finding.
   
@@ -44,7 +46,7 @@ __      _| |__   ___   __ _ _ __ ___ (_)
 | `neofetch` | the obligatory flex |
 | `theme` | change the colour scheme |
 | `echo` · `date` · `history` · `uname` · `uptime` · `clear` · `motd` | the usual suspects |
-| `cowsay` · `banner` · `sudo` · `vim` … | for fun |
+| `cowsay` · `banner` · `figlet` · `sudo` · `vim` … | for fun |
 
 Type `help` in the terminal for the full list, or `man <command>` for details.
 
