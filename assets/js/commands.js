@@ -326,7 +326,7 @@
       "  -type f         files only\n" +
       "  -type d         directories only\n\n" +
       "Hidden dot-entries are skipped (same as `tree`).",
-    examples: "find\nfind projects -name \"*.md\"\nfind ~ -type d",
+    examples: 'find\nfind projects -name "*.md"\nfind ~ -type d',
     see: "tree, ls, grep",
     run: function (ctx) {
       var start = null,
@@ -392,11 +392,7 @@
             })
             .sort()
             .forEach(function (n) {
-              emit(
-                node.children[n],
-                dispPath.replace(/\/+$/, "") + "/" + n,
-                n,
-              );
+              emit(node.children[n], dispPath.replace(/\/+$/, "") + "/" + n, n);
             });
         }
       })(r.node, start, r.parts.length ? r.parts[r.parts.length - 1] : "/");
@@ -453,7 +449,8 @@
       "-n has no effect). Without -r, grepping a directory is an error —\n" +
       "just like the real thing. Hidden dot-entries are skipped when\n" +
       "recursing.",
-    examples: "grep tinker about/bio.txt\ngrep -ri plex projects\ngrep -rl tinker ~\ngrep -n link projects/clix.md",
+    examples:
+      "grep tinker about/bio.txt\ngrep -ri plex projects\ngrep -rl tinker ~\ngrep -n link projects/clix.md",
     see: "cat, find",
     run: function (ctx) {
       var ignore = false,
@@ -558,7 +555,9 @@
           units.push({ error: notFound("grep", target) });
         } else if (r.node.type === "dir") {
           if (!recursive) {
-            units.push({ error: c.red("grep: " + target + ": Is a directory") });
+            units.push({
+              error: c.red("grep: " + target + ": Is a directory"),
+            });
           } else {
             var files = [];
             collect(r.node, target, files);
@@ -823,7 +822,7 @@
   /* ---- reset ------------------------------------------------------- */
   def("reset", {
     group: "System",
-    summary: "start fresh, like you just opened the page",
+    summary: "start fresh",
     usage: "reset",
     description:
       "Reset the terminal to a clean slate: clear the screen and\n" +
