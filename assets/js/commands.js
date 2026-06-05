@@ -1000,7 +1000,7 @@
     description:
       "Spell out TEXT in large ASCII letters, like the unix `figlet`.\n" +
       "Choose a typeface with -f; run `figlet -f` (or `figlet -l`) to\n" +
-      "list the bundled fonts. With no text, it prints my name.",
+      "list the bundled fonts. With no text, it spells out `whoami`.",
     examples:
       "figlet hello\n" +
       "figlet -f slant Hire me!\n" +
@@ -1055,7 +1055,7 @@
       if (wantList && !words.length) {
         return fontList(font);
       }
-      var msg = words.join(" ") || (P && P.name) || "hello";
+      var msg = words.join(" ") || "whoami";
       var lines = Figlet.render(msg, font);
       if (!lines.length) {
         return c.dim("figlet: nothing to render");
