@@ -776,10 +776,7 @@
         field("Uptime", fmtUptime(Date.now() - ctx.term.bootTime)),
         field("Resolution", window.innerWidth + "x" + window.innerHeight),
         field("Theme", ctx.term.themeName),
-        field(
-          "CPU",
-          "Caffeine @ " + (new Date().getHours() < 12 ? "low" : "high"),
-        ),
+        field("CPU", U.cpu()),
         "",
         [
           "clr-red",
@@ -832,12 +829,41 @@
       "Reset the terminal to a clean slate: clear the screen and\n" +
       "scrollback, return to the home directory, forget this session's\n" +
       "command history, and replay the welcome banner. Unlike `clear`, this\n" +
-      "wipes your place and history too — exactly as if you had just opened\n" +
-      "the page. (Your theme is kept.)",
-    see: "clear, motd",
+      "wipes your place and history too. It skips the boot screen, though —\n" +
+      "for the full power-on, see `reboot`. (Your theme is kept.)",
+    see: "reboot, clear, motd",
     run: function (ctx) {
       ctx.term.reset();
       return undefined;
+    },
+  });
+
+  /* ---- reboot ------------------------------------------------------ */
+  def("reboot", {
+    group: "System",
+    summary: "restart the terminal from the boot screen",
+    usage: "reboot",
+    description:
+      "Power-cycle the terminal: tear down this session and start over\n" +
+      "from the BIOS/POST boot sequence, just like a fresh power-on. Like\n" +
+      "`reset`, but it reboots through the whole boot screen first. (Your\n" +
+      "theme is kept.)",
+    see: "reset, clear",
+    run: function (ctx) {
+      var term = ctx.term;
+      term.ready = false; // ignore input while the machine "powers down"
+      // Flash the classic shutdown broadcast, leave it up long enough to
+      // read, then power-cycle through the full boot sequence.
+      setTimeout(function () {
+        term.reboot();
+      }, 1600);
+      return (
+        c.dim("Broadcast message from ") +
+        c.green(FS.USER + "@" + FS.HOST) +
+        c.dim(":") +
+        "\n\n" +
+        c.yellow("The system is going down for reboot NOW!")
+      );
     },
   });
 

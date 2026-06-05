@@ -190,7 +190,7 @@
     this.state = 'normal';
     if (this.isDesktop()) { this._apply(this.saved || this._defaultGeom()); }
     else { this._clearInline(); }
-    this.term.reset(); // boot the terminal fresh
+    this.term.reboot(); // power back on with the full boot sequence
   };
 
   /* ----- responsive bookkeeping ------------------------------------ */

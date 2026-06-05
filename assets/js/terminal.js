@@ -16,6 +16,19 @@
     return (FS.PROFILE && FS.PROFILE.shell) || "jsh";
   }
 
+  // Honour the OS "reduce motion" setting: when on, the boot reveal is shown
+  // all at once instead of animating.
+  function prefersReducedMotion() {
+    try {
+      return !!(
+        global.matchMedia &&
+        global.matchMedia("(prefers-reduced-motion: reduce)").matches
+      );
+    } catch (e) {
+      return false;
+    }
+  }
+
   var THEMES = ["default", "matrix", "amber", "dracula", "light"];
   var THEME_KEY = "whoami-theme";
 
@@ -296,6 +309,37 @@
       c.dim(
         "Tip: type a command and hit Enter. <Tab> completes, ↑/↓ = history.",
       ),
+    ];
+  };
+
+  // A tongue-in-cheek BIOS/POST scroll, shown once before the banner on boot.
+  // Plain text (wraps like the welcome block), kept narrow so it fits phones.
+  Terminal.prototype.postLines = function () {
+    var name = (FS.PROFILE && FS.PROFILE.name) || "whoami";
+    var year = new Date().getFullYear();
+    // "Label ........ [ OK ]" — dot leader is sized from the plain label.
+    function probe(label, status) {
+      var dots = new Array(Math.max(3, 34 - label.length)).join(".");
+      return c.dim(label + " " + dots + " ") + c.green("[ " + status + " ]");
+    }
+    return [
+      U.wrap(c.accent("whoami BIOS v2.6 — vanilla edition"), "bold"),
+      c.dim("(c) 1994-" + year + "  No Frameworks, Inc.  All rights reserved."),
+      "",
+      c.green("CPU") + c.dim("     : ") + U.cpu(),
+      c.green("Memory") + c.dim("  : ") + c.accent("65536K") + c.dim(" OK"),
+      c.green("Cache") + c.dim("   : ") + "L1 localStorage " + c.dim("(theme remembered)"),
+      "",
+      probe("Detecting input devices", "OK"),
+      probe("Initializing display adapter", "OK"),
+      probe("Mounting filesystem (read-only)", "OK"),
+      probe("Loading profile: " + name, "OK"),
+      "",
+      c.dim("Boot device: ") +
+        c.green("RAMEN0") +
+        c.dim(" — starting ") +
+        c.green(shellName()) +
+        c.dim("..."),
     ];
   };
 
@@ -667,9 +711,13 @@
   }
 
   /* ----- boot ------------------------------------------------------- */
-  // Reveal the MOTD line-by-line, then hand control to the user.
-  Terminal.prototype.boot = function () {
+  // Optionally scroll a fake BIOS/POST; then — as if POST finished and the OS
+  // took over — wipe the boot screen and load the terminal: reveal the MOTD
+  // line-by-line and hand control to the user. A key or click skips straight
+  // to the loaded terminal. Pass { post: false } to skip the boot screen.
+  Terminal.prototype.boot = function (opts) {
     var self = this;
+    var withPost = !(opts && opts.post === false);
     this.loadTheme();
     this.renderPrompt();
     this.renderInput();
@@ -677,26 +725,8 @@
 
     var banner = this.motdBannerLines();
     var lines = this.motdTextLines();
-    var artBox = this.write("", "art"); // banner: doesn't wrap, fits to width
-    var txtBox = this.write(""); // welcome text: wraps normally
+    var skipped = false;
 
-    // a flat reveal timeline across both boxes
-    var steps = [];
-    banner.forEach(function (_, n) {
-      steps.push({ box: artBox, html: banner.slice(0, n + 1).join("\n") });
-    });
-    lines.forEach(function (_, n) {
-      steps.push({ box: txtBox, html: lines.slice(0, n + 1).join("\n") });
-    });
-
-    var i = 0,
-      skipped = false;
-
-    function dump() {
-      artBox.innerHTML = banner.join("\n");
-      txtBox.innerHTML = lines.join("\n");
-      finish();
-    }
     function finish() {
       if (self.ready) {
         return;
@@ -710,6 +740,46 @@
       global.removeEventListener("keydown", skip, true);
       self.els.root.removeEventListener("mousedown", skip, true);
     }
+
+    // The end state: a freshly loaded terminal — the MOTD on a clean screen.
+    // animated=false fills it instantly (used by skip / reduced-motion).
+    function loadTerminal(animated) {
+      var artBox = self.write("", "art"); // banner: doesn't wrap, fits width
+      var txtBox = self.write(""); // welcome text: wraps normally
+      if (!animated) {
+        artBox.innerHTML = banner.join("\n");
+        txtBox.innerHTML = lines.join("\n");
+        finish();
+        return;
+      }
+      var steps = [];
+      banner.forEach(function (_, n) {
+        steps.push({ box: artBox, html: banner.slice(0, n + 1).join("\n"), delay: 55 });
+      });
+      lines.forEach(function (_, n) {
+        steps.push({ box: txtBox, html: lines.slice(0, n + 1).join("\n"), delay: 28 });
+      });
+      var i = 0;
+      (function tick() {
+        if (skipped) {
+          return;
+        }
+        if (i >= steps.length) {
+          finish();
+          return;
+        }
+        steps[i].box.innerHTML = steps[i].html;
+        self.scroll();
+        i++;
+        setTimeout(tick, steps[i - 1].delay);
+      })();
+    }
+
+    // Skip: jump straight to the loaded terminal (boot screen wiped).
+    function dump() {
+      self.clearScreen();
+      loadTerminal(false);
+    }
     function skip() {
       if (skipped) {
         return;
@@ -718,28 +788,61 @@
       dump();
     }
 
+    // Reduced motion: no animation — just the loaded terminal.
+    if (prefersReducedMotion()) {
+      self.clearScreen();
+      loadTerminal(false);
+      return;
+    }
+
     global.addEventListener("keydown", skip, true);
     this.els.root.addEventListener("mousedown", skip, true);
 
+    if (!withPost) {
+      // Soft reset: no boot screen, just (re)load the terminal.
+      loadTerminal(true);
+      return;
+    }
+
+    // Boot screen: rattle the POST log out, sit on the last line a beat, then —
+    // as if the machine finished POST and handed off — wipe it and load the OS.
+    var post = this.postLines();
+    var postBox = this.write("", "post");
+    var steps = [];
+    post.forEach(function (_, n) {
+      steps.push({ html: post.slice(0, n + 1).join("\n"), delay: 24 });
+    });
+    if (steps.length) {
+      // hold on the finished boot screen long enough to actually read it
+      steps[steps.length - 1].delay = 1800;
+    }
+    var i = 0;
     (function tick() {
       if (skipped) {
         return;
       }
       if (i >= steps.length) {
-        finish();
+        self.clearScreen(); // POST done -> wipe the boot screen
+        setTimeout(function () {
+          // a black screen beat, like a real machine handing off to the OS
+          if (!skipped) {
+            loadTerminal(true);
+          }
+        }, 650);
         return;
       }
-      steps[i].box.innerHTML = steps[i].html;
+      postBox.innerHTML = steps[i].html;
       self.scroll();
       i++;
-      setTimeout(tick, i <= banner.length ? 55 : 28); // banner a touch slower
+      setTimeout(tick, steps[i - 1].delay);
     })();
   };
 
-  // Start over as if the page had just been opened: clear everything, go home,
-  // forget this session, restart the clock, and replay the boot animation.
-  // (The saved theme is kept — that's what loads on a real fresh open.)
-  Terminal.prototype.reset = function () {
+  // Tear the session back down to a just-opened state — clear everything, go
+  // home, forget history, restart the clock — without rebooting. (The saved
+  // theme is kept; that's what loads on a real fresh open.) Shared by reset
+  // and reboot.
+  Terminal.prototype._freshSession = function () {
     this.history = [];
     this.histIndex = 0;
     this.draft = "";
@@ -748,7 +851,18 @@
     this.els.input.value = "";
     this.ready = false; // let boot() run its reveal again
     this.clearScreen();
-    this.boot();
+  };
+
+  // Soft reset: clean slate + the welcome banner. Skips the BIOS/POST screen.
+  Terminal.prototype.reset = function () {
+    this._freshSession();
+    this.boot({ post: false });
+  };
+
+  // Full power-cycle: clean slate + the whole boot sequence (POST + banner).
+  Terminal.prototype.reboot = function () {
+    this._freshSession();
+    this.boot({ post: true });
   };
 
   global.Terminal = Terminal;

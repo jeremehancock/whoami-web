@@ -19,6 +19,8 @@ __      _| |__   ___   __ _ _ __ ___ (_)
 
 - 🖥️  **Looks like a real terminal** — window chrome, blinking block cursor,
   coloured output, scanlines on the retro themes.
+- ⚡  **Boots like one too** — a tongue-in-cheek BIOS/POST scroll plays before
+  the welcome banner (any key or click skips it; honours reduced-motion).
 - 📂  **A virtual filesystem** you actually walk through with `ls` / `cd` / `cat`
   (relative paths, `..`, `~`, and `/` all work).
 - 📖  **`man` pages** and `whatis` for every built-in command.
