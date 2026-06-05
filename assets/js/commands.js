@@ -90,6 +90,18 @@
     return new RegExp("^" + re + "$", ci ? "i" : "");
   }
 
+  // Does the OS ask for reduced motion? (animations fall back to a still frame)
+  function reducedMotion() {
+    try {
+      return !!(
+        global.matchMedia &&
+        global.matchMedia("(prefers-reduced-motion: reduce)").matches
+      );
+    } catch (e) {
+      return false;
+    }
+  }
+
   /* ------------------------------------------------------------------ *
    * the registry
    * ------------------------------------------------------------------ */
@@ -1223,6 +1235,172 @@
         "64 bytes from 127.0.0.1: icmp_seq=1 ttl=64 time=0.038 ms",
         c.green("pong.") + c.dim("  (I'm here. Try: whoami)"),
       ].join("\n");
+    },
+  });
+
+  /* ---- sl (easter egg) --------------------------------------------- */
+  // You fat-fingered `ls`, so a steam locomotive chuffs past. Authentic D51
+  // from mtoyoda/sl: the body is static and the wheels cycle through six
+  // patterns as it rolls. A smoke plume rides above the funnel.
+  var SL_SMOKE = [
+    "                    ( )",
+    "                 (@@@)",
+    "              (   )",
+    "          (@@)",
+  ];
+  var SL_BODY = [
+    "      ====        ________                ___________ ",
+    "  _D _|  |_______/        \\__I_I_____===__|_________| ",
+    "   |(_)---  |   H\\________/ |   |        =|___ ___|   ",
+    "   /     |  |   H  |  |     |   |         ||_| |_||   ",
+    "  |      |  |   H  |__--------------------| [___] |   ",
+    "  | ________|___H__/__|_____/[][]~\\_______|       |   ",
+    "  |/ |   |-----------I_____I [][] []  D   |=======|__ ",
+  ];
+  var SL_WHEELS = [
+    [
+      "__/ =| o |=-~~\\  /~~\\  /~~\\  /~~\\ ____Y___________|__ ",
+      " |/-=|___|=    ||    ||    ||    |_____/~\\___/        ",
+      "  \\_/      \\O=====O=====O=====O_/      \\_/            ",
+    ],
+    [
+      "__/ =| o |=-~~\\  /~~\\  /~~\\  /~~\\ ____Y___________|__ ",
+      " |/-=|___|=O=====O=====O=====O   |_____/~\\___/        ",
+      "  \\_/      \\__/  \\__/  \\__/  \\__/      \\_/            ",
+    ],
+    [
+      "__/ =| o |=-O=====O=====O=====O \\ ____Y___________|__ ",
+      " |/-=|___|=    ||    ||    ||    |_____/~\\___/        ",
+      "  \\_/      \\__/  \\__/  \\__/  \\__/      \\_/            ",
+    ],
+    [
+      "__/ =| o |=-~O=====O=====O=====O\\ ____Y___________|__ ",
+      " |/-=|___|=    ||    ||    ||    |_____/~\\___/        ",
+      "  \\_/      \\__/  \\__/  \\__/  \\__/      \\_/            ",
+    ],
+    [
+      "__/ =| o |=-~~\\  /~~\\  /~~\\  /~~\\ ____Y___________|__ ",
+      " |/-=|___|=   O=====O=====O=====O|_____/~\\___/        ",
+      "  \\_/      \\__/  \\__/  \\__/  \\__/      \\_/            ",
+    ],
+    [
+      "__/ =| o |=-~~\\  /~~\\  /~~\\  /~~\\ ____Y___________|__ ",
+      " |/-=|___|=    ||    ||    ||    |_____/~\\___/        ",
+      "  \\_/      \\_O=====O=====O=====O/      \\_/            ",
+    ],
+  ];
+
+  def("sl", {
+    group: "Fun",
+    hidden: true,
+    summary: "steam locomotive (you meant ls)",
+    usage: "sl",
+    description:
+      "You typed `sl`. You meant `ls`. As is tradition, a steam locomotive\n" +
+      "rolls past instead. A key or click lets it pass faster.",
+    see: "ls",
+    run: function (ctx) {
+      var term = ctx.term;
+      var box = term.write("", "art");
+
+      // Measure how many characters fit across the screen at the art font
+      // size, so the train scrolls the visible width without overflowing.
+      var cols = 64;
+      try {
+        var probe = document.createElement("span");
+        probe.style.whiteSpace = "pre";
+        probe.textContent = "0123456789";
+        box.appendChild(probe);
+        var cw = probe.getBoundingClientRect().width / 10;
+        var bw = box.getBoundingClientRect().width;
+        box.removeChild(probe);
+        if (cw && bw) {
+          cols = Math.max(24, Math.floor(bw / cw) - 1);
+        }
+      } catch (e) {
+        /* not measurable (e.g. headless) — keep the default */
+      }
+
+      function frame(p) {
+        return SL_SMOKE.concat(SL_BODY, SL_WHEELS[p]);
+      }
+      var trainW = 0;
+      frame(0).forEach(function (l) {
+        if (l.length > trainW) {
+          trainW = l.length;
+        }
+      });
+
+      // Render the train with its left edge at column x, clipped to the screen.
+      function paint(x, p) {
+        var raw = frame(p)
+          .map(function (line) {
+            var s = x >= 0 ? new Array(x + 1).join(" ") + line : line.slice(-x);
+            return s.length > cols ? s.slice(0, cols) : s;
+          })
+          .join("\n");
+        box.innerHTML = c.accent(raw);
+      }
+
+      // Reduced motion: skip the ride, just park the locomotive.
+      if (reducedMotion()) {
+        paint(2, 0);
+        return undefined;
+      }
+
+      term.ready = false; // the show has the floor until it's done
+      var x = cols,
+        p = 0,
+        done = false;
+
+      function stop() {
+        if (done) {
+          return;
+        }
+        done = true;
+        global.removeEventListener("keydown", skip, true);
+        global.removeEventListener("pointerdown", skip, true);
+        if (box.parentNode) {
+          box.parentNode.removeChild(box);
+        }
+        term.ready = true;
+        term.focus();
+        term.scroll();
+      }
+      // A key or click cuts the ride short. Let real shortcuts (Ctrl/Cmd/Alt
+      // combos, e.g. reload) through; swallow plain keys so they don't type.
+      function skip(e) {
+        if (e && e.type === "keydown") {
+          if (e.ctrlKey || e.metaKey || e.altKey) {
+            return;
+          }
+          if (e.preventDefault) {
+            e.preventDefault();
+          }
+          if (e.stopPropagation) {
+            e.stopPropagation();
+          }
+        }
+        stop();
+      }
+      global.addEventListener("keydown", skip, true);
+      global.addEventListener("pointerdown", skip, true);
+
+      (function tick() {
+        if (done) {
+          return;
+        }
+        if (x <= -trainW) {
+          stop();
+          return;
+        }
+        paint(x, p);
+        term.scroll();
+        x -= 2;
+        p = (p + 1) % SL_WHEELS.length;
+        setTimeout(tick, 55);
+      })();
+      return undefined;
     },
   });
 
