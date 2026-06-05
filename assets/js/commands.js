@@ -17,6 +17,7 @@
   var U = global.U;
   var c = U.color;
   var P = FS.PROFILE;
+  var Figlet = global.Figlet;
 
   /* Mark output as ASCII art: it must not word-wrap (it shrinks / scrolls
    * to fit narrow screens instead). The terminal reads the `.art` flag. */
@@ -988,6 +989,78 @@
     description: 'Print the giant "whoami" ASCII banner, because why not.',
     run: function () {
       return art(c.accent(FS.ART.whoami));
+    },
+  });
+
+  /* ---- figlet ------------------------------------------------------ */
+  def("figlet", {
+    group: "Fun",
+    summary: "render text as big ASCII letters",
+    usage: "figlet [-f font] [text...]",
+    description:
+      "Spell out TEXT in large ASCII letters, like the unix `figlet`.\n" +
+      "Choose a typeface with -f; run `figlet -f` (or `figlet -l`) to\n" +
+      "list the bundled fonts. With no text, it spells out `whoami`.",
+    examples:
+      "figlet hello\n" +
+      "figlet -f slant Hire me!\n" +
+      "figlet -f banner whoami\n" +
+      "figlet -l",
+    see: "banner, cowsay",
+    run: function (ctx) {
+      if (!Figlet) {
+        return c.red("figlet: renderer unavailable");
+      }
+      function fontList(current) {
+        return (
+          c.dim("Fonts (default: ") +
+          c.accent(Figlet.DEFAULT) +
+          c.dim("):") +
+          "\n  " +
+          Figlet.fonts()
+            .map(function (f) {
+              return f === current ? c.accent(f) : c.green(f);
+            })
+            .join("   ") +
+          "\n\n" +
+          c.dim("Use:  figlet -f <font> <text>")
+        );
+      }
+      var args = ctx.args;
+      var font = Figlet.DEFAULT;
+      var words = [];
+      var wantList = false;
+      for (var i = 0; i < args.length; i++) {
+        var a = args[i];
+        if (a === "-f" || a === "--font") {
+          // `-f name` picks a font; a bare `-f` just lists what's available
+          if (i + 1 < args.length) {
+            font = args[++i];
+          } else {
+            wantList = true;
+          }
+        } else if (a === "-l" || a === "--list" || a === "--fonts") {
+          wantList = true;
+        } else {
+          words.push(a);
+        }
+      }
+      if (!Figlet.has(font)) {
+        return (
+          c.red('figlet: unknown font "' + U.esc(font) + '"') +
+          "\n" +
+          fontList(Figlet.DEFAULT)
+        );
+      }
+      if (wantList && !words.length) {
+        return fontList(font);
+      }
+      var msg = words.join(" ") || "whoami";
+      var lines = Figlet.render(msg, font);
+      if (!lines.length) {
+        return c.dim("figlet: nothing to render");
+      }
+      return art(c.accent(lines.join("\n")));
     },
   });
 
