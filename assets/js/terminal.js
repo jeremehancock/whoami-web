@@ -29,6 +29,21 @@
     }
   }
 
+  // Recover the plain text a command "printed", to feed the next stage of a
+  // pipe. Commands emit HTML (colour spans, links, escaped entities); rendering
+  // it into a detached node and reading textContent hands back exactly the
+  // visible text — entities un-escaped, tags gone, spacing and newlines intact.
+  // Colour is dropped, which is what a real pipe does too: it carries the text,
+  // not the formatting.
+  function htmlToText(html) {
+    if (!html) {
+      return "";
+    }
+    var d = document.createElement("div");
+    d.innerHTML = html;
+    return d.textContent || "";
+  }
+
   var THEMES = ["default", "matrix", "amber", "dracula", "light"];
   var THEME_KEY = "whoami-theme";
 
@@ -545,10 +560,42 @@
     return { command: h[idx] + rest };
   };
 
+  // Run a command line. A line may be a pipeline: `a | b | c`. Each stage's
+  // plain-text output becomes the next stage's stdin (ctx.stdin); only the
+  // final stage is drawn to the screen. A line with no '|' is simply a
+  // one-stage pipeline, so it runs exactly as a lone command always has.
   Terminal.prototype.run = function (line) {
+    var segments = U.splitPipeline(line);
+    // A '|' needs a command on both sides; reject empty stages when piping.
+    if (
+      segments.length > 1 &&
+      segments.some(function (s) {
+        return s === "";
+      })
+    ) {
+      this.write(
+        c.red(shellName() + ": syntax error near unexpected token `|'"),
+      );
+      return;
+    }
+    var stdin = null;
+    for (var i = 0; i < segments.length; i++) {
+      var res = this._exec(segments[i], stdin, i === segments.length - 1);
+      if (res.notFound) {
+        return; // an unknown command aborts the rest of the pipeline
+      }
+      stdin = res.text;
+    }
+  };
+
+  // Run a single stage. Returns { text, notFound } — `text` is the plain-text
+  // form of the command's output, for feeding the next stage of a pipe. When
+  // `render` is true the output is also written to the screen, exactly the way
+  // a lone command's output always has been.
+  Terminal.prototype._exec = function (line, stdin, render) {
     var tokens = U.tokenize(line);
     if (!tokens.length) {
-      return;
+      return { text: "" };
     }
     var name = tokens[0];
     var spec = Commands[name];
@@ -560,12 +607,13 @@
           c.green("help") +
           c.dim(" to see what I can do."),
       );
-      return;
+      return { notFound: true, text: "" };
     }
     var ctx = {
       cmd: name,
       args: tokens.slice(1),
       rawArgs: tokens.slice(1).join(" "),
+      stdin: stdin == null ? null : stdin,
       term: this,
       print: this.write.bind(this),
     };
@@ -578,13 +626,24 @@
         console.error(err);
       }
     }
-    if (out && typeof out === "object" && out.html !== undefined) {
-      this.write(out.html, out.art ? "art" : undefined);
-    } else if (out !== undefined && out !== null && out !== "") {
-      this.write(out);
-    } else if (out === "") {
-      this.write(""); // preserve an intentional blank line of output
+    if (render) {
+      if (out && typeof out === "object" && out.html !== undefined) {
+        this.write(out.html, out.art ? "art" : undefined);
+      } else if (out !== undefined && out !== null && out !== "") {
+        this.write(out);
+      } else if (out === "") {
+        this.write(""); // preserve an intentional blank line of output
+      }
+      return { text: "" }; // final stage: nothing downstream needs the text
     }
+    // Intermediate stage: capture the text for the pipe, draw nothing.
+    var html =
+      out && typeof out === "object" && out.html !== undefined
+        ? out.html
+        : typeof out === "string"
+          ? out
+          : "";
+    return { text: htmlToText(html) };
   };
 
   /* ----- tab completion -------------------------------------------- */

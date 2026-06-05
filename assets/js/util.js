@@ -63,6 +63,30 @@
     return escaped;
   }
 
+  /* Split a command line into pipeline stages on top-level '|'. Quote-aware,
+     so a '|' inside 'single' or "double" quotes is literal and does NOT split.
+     Quotes are left in place for tokenize() to strip per stage. Stages are
+     trimmed; empty stages are kept so callers can spot a stray/doubled '|'
+     (e.g. "a || b" -> ["a", "", "b"]). A line with no '|' yields one stage. */
+  function splitPipeline(str) {
+    var out = [], cur = '', quote = null, i;
+    for (i = 0; i < str.length; i++) {
+      var ch = str[i];
+      if (quote) {
+        cur += ch;
+        if (ch === quote) { quote = null; }
+      } else if (ch === '"' || ch === "'") {
+        quote = ch; cur += ch;
+      } else if (ch === '|') {
+        out.push(cur); cur = '';
+      } else {
+        cur += ch;
+      }
+    }
+    out.push(cur);
+    return out.map(function (s) { return s.trim(); });
+  }
+
   /* Split a command line into tokens, honouring 'single' and "double" quotes. */
   function tokenize(str) {
     var out = [], cur = '', quote = null, has = false, i;
@@ -104,6 +128,7 @@
     c: color,
     linkify: linkify,
     tokenize: tokenize,
+    splitPipeline: splitPipeline,
     pad: pad,
     cpu: cpu
   };

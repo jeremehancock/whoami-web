@@ -420,11 +420,17 @@
     usage: "cat <file> [file...]",
     description:
       "Dump one or more files to the screen. This is how you read\n" +
-      "everything on the site.",
-    examples: "cat README.md\ncat about/bio.txt",
-    see: "ls, cd",
+      "everything on the site.\n\n" +
+      "With no file given but input piped in, cat prints that input —\n" +
+      "so it works as the tail end of a pipe (e.g. `figlet hi | cat`).",
+    examples: "cat README.md\ncat about/bio.txt\nfiglet hi | cat",
+    see: "ls, cd, grep",
     run: function (ctx) {
       if (!ctx.args.length) {
+        // No files, but piped input -> behave like `cat` reading stdin.
+        if (ctx.stdin != null) {
+          return U.linkify(U.esc(ctx.stdin));
+        }
         return c.red("cat: missing file operand");
       }
       var out = [];
@@ -460,9 +466,11 @@
       "With -l you get one filename per matching file and nothing else (so\n" +
       "-n has no effect). Without -r, grepping a directory is an error —\n" +
       "just like the real thing. Hidden dot-entries are skipped when\n" +
-      "recursing.",
+      "recursing.\n\n" +
+      "With no FILE but input piped in, grep searches that input instead —\n" +
+      "so it filters the output of another command (e.g. the example below).",
     examples:
-      "grep tinker about/bio.txt\ngrep -ri plex projects\ngrep -rl tinker ~\ngrep -n link projects/clix.md",
+      "grep tinker about/bio.txt\ngrep -ri plex projects\ngrep -rl tinker ~\ngrep -n link projects/clix.md\ncat projects/README.md | grep -i plex",
     see: "cat, find",
     run: function (ctx) {
       var ignore = false,
@@ -498,8 +506,14 @@
         return c.red("grep: missing pattern") + "\n" + usage;
       }
       var pattern = operands.shift();
+      // A pattern with no files greps the pipe (stdin), if there is one.
+      var stdinUnit = null;
       if (!operands.length) {
-        return c.red("grep: missing file operand") + "\n" + usage;
+        if (ctx.stdin != null) {
+          stdinUnit = { label: "(standard input)", content: ctx.stdin };
+        } else {
+          return c.red("grep: missing file operand") + "\n" + usage;
+        }
       }
 
       var re;
@@ -559,30 +573,35 @@
       }
 
       // Pass 1: turn each target into ordered units (errors + file sources).
+      // With piped input and no files, the pipe is the one and only source.
       var units = [],
         fileCount = 0;
-      operands.forEach(function (target) {
-        var r = FS.resolve(ctx.term.cwd, target);
-        if (!r.ok) {
-          units.push({ error: notFound("grep", target) });
-        } else if (r.node.type === "dir") {
-          if (!recursive) {
-            units.push({
-              error: c.red("grep: " + target + ": Is a directory"),
-            });
+      if (stdinUnit) {
+        units.push(stdinUnit);
+      } else {
+        operands.forEach(function (target) {
+          var r = FS.resolve(ctx.term.cwd, target);
+          if (!r.ok) {
+            units.push({ error: notFound("grep", target) });
+          } else if (r.node.type === "dir") {
+            if (!recursive) {
+              units.push({
+                error: c.red("grep: " + target + ": Is a directory"),
+              });
+            } else {
+              var files = [];
+              collect(r.node, target, files);
+              files.forEach(function (f) {
+                units.push(f);
+                fileCount++;
+              });
+            }
           } else {
-            var files = [];
-            collect(r.node, target, files);
-            files.forEach(function (f) {
-              units.push(f);
-              fileCount++;
-            });
+            units.push({ label: target, content: r.node.content });
+            fileCount++;
           }
-        } else {
-          units.push({ label: target, content: r.node.content });
-          fileCount++;
-        }
-      });
+        });
+      }
 
       // Pass 2: print results. With -l, list each matching file once;
       // otherwise print the matching lines in order.
