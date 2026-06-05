@@ -944,7 +944,7 @@
             "x86_64 x86_64 x86_64 GNU/JavaScript",
         );
       }
-      return "whoami-web";
+      return `whoami-web - ${anchor("https://github.com/jeremehancock/whoami-web", "Learn more...")}`;
     },
   });
 
