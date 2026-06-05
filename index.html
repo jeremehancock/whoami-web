@@ -60,6 +60,12 @@
     </div>
   </main>
 
+  <!-- Blank-screen boot console. The BIOS/POST scroll plays here, full-screen
+       with no window chrome, on power-on and `reboot` — then it fades to reveal
+       the terminal window (see Terminal.boot). Hidden until JS shows it, so
+       no-JS visitors just get the terminal, not a black screen. -->
+  <div class="bootscreen" id="bootscreen" aria-hidden="true" hidden></div>
+
   <!-- shown after the window is "closed" (desktop only) -->
   <button id="restart-terminal" class="restart-btn" hidden>&gt; restart terminal</button>
 

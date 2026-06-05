@@ -193,6 +193,42 @@ body {
   opacity: 1;
 }
 
+/* ----- boot console (the blank screen before the window) ------------- */
+/* On power-on (and `reboot`) the BIOS/POST log scrolls here: full-screen,
+   no window chrome, like a real machine booting. When POST finishes it fades
+   out to reveal the terminal window underneath. */
+.bootscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 50;                          /* above the window and the restart btn */
+  overflow: hidden auto;
+  padding: clamp(12px, 3vmin, 28px);
+  background: var(--bg-deep);           /* a blank, near-black screen */
+  color: var(--fg);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  text-shadow: var(--glow);
+  cursor: default;
+  transition: opacity 280ms ease;
+}
+.bootscreen.is-hiding { opacity: 0; }   /* fade away to reveal the terminal */
+.bootscreen[hidden] { display: none; }
+
+/* scanlines, matching the window on the CRT-ish themes (no-op when --scan: 0) */
+.bootscreen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, var(--scan)) 0px,
+    rgba(0, 0, 0, var(--scan)) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}
+
 /* ----- title bar ----------------------------------------------------- */
 .titlebar {
   flex: 0 0 auto;

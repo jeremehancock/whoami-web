@@ -65,9 +65,10 @@
       typed:     byId('typed'),
       cursor:    byId('cursor'),
       rest:      byId('rest'),
-      input:     byId('hidden-input'),
-      titleText: byId('title-text'),
-      quickbar:  byId('quickbar')
+      input:      byId('hidden-input'),
+      titleText:  byId('title-text'),
+      quickbar:   byId('quickbar'),
+      bootscreen: byId('bootscreen')
     };
 
     var term = new global.Terminal(els);
