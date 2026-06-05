@@ -62,9 +62,17 @@
 
   <!-- Blank-screen boot console. The BIOS/POST scroll plays here, full-screen
        with no window chrome, on power-on and `reboot` — then it fades to reveal
-       the terminal window (see Terminal.boot). Hidden until JS shows it, so
-       no-JS visitors just get the terminal, not a black screen. -->
+       the terminal window (see Terminal.boot). Hidden in the markup so no-JS
+       visitors just get the terminal, not a black screen. -->
   <div class="bootscreen" id="bootscreen" aria-hidden="true" hidden></div>
+  <script>
+    // Power on right away: reveal the boot console the instant it's parsed —
+    // before first paint and before the deferred app scripts load — so the page
+    // opens straight onto the blank boot screen instead of flashing the empty
+    // terminal first. boot() runs the POST animation from here. (Reduced-motion
+    // visitors skip the boot screen; CSS keeps it hidden for them.)
+    document.getElementById('bootscreen').hidden = false;
+  </script>
 
   <!-- shown after the window is "closed" (desktop only) -->
   <button id="restart-terminal" class="restart-btn" hidden>&gt; restart terminal</button>

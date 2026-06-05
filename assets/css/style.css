@@ -507,4 +507,5 @@ a:hover { text-decoration-style: solid; }
 @media (prefers-reduced-motion: reduce) {
   .terminal.focused .cursor { animation: none; }
   .screen { scroll-behavior: auto; }
+  .bootscreen { display: none; } /* skip the blank boot screen entirely */
 }
