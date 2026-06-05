@@ -52,7 +52,7 @@ __      _| |__   ___   __ _ _ __ ___ (_)
 | `neofetch`                                                          | the obligatory flex             |
 | `theme`                                                             | change the colour scheme        |
 | `echo` · `date` · `history` · `uname` · `uptime` · `clear` · `motd` | the usual suspects              |
-| `cowsay` · `banner` · `figlet` · `lolcat` · `sudo` · `vim` …        | for fun                         |
+| `cowsay` · `banner` · `figlet` · `lolcat` …                         | for fun                         |
 
 Type `help` in the terminal for the full list, or `man <command>` for details.
 
