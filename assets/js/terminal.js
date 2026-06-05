@@ -711,21 +711,23 @@
   }
 
   /* ----- boot ------------------------------------------------------- */
-  // Scroll a fake BIOS/POST, then reveal the MOTD line-by-line, then hand
-  // control to the user. A key or click skips straight to the prompt.
-  Terminal.prototype.boot = function () {
+  // Optionally scroll a fake BIOS/POST, then reveal the MOTD line-by-line,
+  // then hand control to the user. A key or click skips straight to the
+  // prompt. Pass { post: false } to skip the boot screen (a soft reset).
+  Terminal.prototype.boot = function (opts) {
     var self = this;
+    var withPost = !(opts && opts.post === false);
     this.loadTheme();
     this.renderPrompt();
     this.renderInput();
     this.focus();
 
-    var post = this.postLines();
+    var post = withPost ? this.postLines() : [];
     var banner = this.motdBannerLines();
     var lines = this.motdTextLines();
 
-    // DOM order top-to-bottom: POST scroll, then banner, then welcome text.
-    var postBox = this.write("", "post"); // boot log: wraps normally
+    // DOM order top-to-bottom: POST scroll (if any), then banner, then text.
+    var postBox = post.length ? this.write("", "post") : null; // boot log
     var artBox = this.write("", "art"); // banner: doesn't wrap, fits to width
     var txtBox = this.write(""); // welcome text: wraps normally
 
@@ -751,7 +753,9 @@
       skipped = false;
 
     function dump() {
-      postBox.innerHTML = post.join("\n");
+      if (postBox) {
+        postBox.innerHTML = post.join("\n");
+      }
       artBox.innerHTML = banner.join("\n");
       txtBox.innerHTML = lines.join("\n");
       finish();
@@ -801,10 +805,11 @@
     })();
   };
 
-  // Start over as if the page had just been opened: clear everything, go home,
-  // forget this session, restart the clock, and replay the boot animation.
-  // (The saved theme is kept — that's what loads on a real fresh open.)
-  Terminal.prototype.reset = function () {
+  // Tear the session back down to a just-opened state — clear everything, go
+  // home, forget history, restart the clock — without rebooting. (The saved
+  // theme is kept; that's what loads on a real fresh open.) Shared by reset
+  // and reboot.
+  Terminal.prototype._freshSession = function () {
     this.history = [];
     this.histIndex = 0;
     this.draft = "";
@@ -813,7 +818,18 @@
     this.els.input.value = "";
     this.ready = false; // let boot() run its reveal again
     this.clearScreen();
-    this.boot();
+  };
+
+  // Soft reset: clean slate + the welcome banner. Skips the BIOS/POST screen.
+  Terminal.prototype.reset = function () {
+    this._freshSession();
+    this.boot({ post: false });
+  };
+
+  // Full power-cycle: clean slate + the whole boot sequence (POST + banner).
+  Terminal.prototype.reboot = function () {
+    this._freshSession();
+    this.boot({ post: true });
   };
 
   global.Terminal = Terminal;
