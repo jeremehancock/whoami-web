@@ -841,6 +841,34 @@
     },
   });
 
+  /* ---- reboot ------------------------------------------------------ */
+  def("reboot", {
+    group: "System",
+    summary: "restart the terminal from the boot screen",
+    usage: "reboot",
+    description:
+      "Power-cycle the terminal: tear down this session and start over\n" +
+      "from the BIOS/POST boot sequence, just like a fresh power-on. Like\n" +
+      "`reset`, but it reboots through the whole boot screen first. (Your\n" +
+      "theme is kept.)",
+    see: "reset, clear",
+    run: function (ctx) {
+      var term = ctx.term;
+      term.ready = false; // ignore input while the machine "powers down"
+      // Flash the classic shutdown broadcast, then power-cycle into boot().
+      setTimeout(function () {
+        term.reset();
+      }, 900);
+      return (
+        c.dim("Broadcast message from ") +
+        c.green(FS.USER + "@" + FS.HOST) +
+        c.dim(":") +
+        "\n\n" +
+        c.yellow("The system is going down for reboot NOW!")
+      );
+    },
+  });
+
   /* ---- echo -------------------------------------------------------- */
   def("echo", {
     group: "System",

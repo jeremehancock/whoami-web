@@ -736,7 +736,9 @@
       steps.push({ box: postBox, html: post.slice(0, n + 1).join("\n"), delay: 24 });
     });
     if (steps.length) {
-      steps[steps.length - 1].delay = 360; // a beat between POST and the banner
+      // a real machine sits on the last POST line for a beat, "loading the
+      // OS", before the banner appears — that pause sells the boot
+      steps[steps.length - 1].delay = 1000;
     }
     banner.forEach(function (_, n) {
       steps.push({ box: artBox, html: banner.slice(0, n + 1).join("\n"), delay: 55 });
