@@ -16,6 +16,19 @@
     return (FS.PROFILE && FS.PROFILE.shell) || "jsh";
   }
 
+  // Honour the OS "reduce motion" setting: when on, the boot reveal is shown
+  // all at once instead of animating.
+  function prefersReducedMotion() {
+    try {
+      return !!(
+        global.matchMedia &&
+        global.matchMedia("(prefers-reduced-motion: reduce)").matches
+      );
+    } catch (e) {
+      return false;
+    }
+  }
+
   var THEMES = ["default", "matrix", "amber", "dracula", "light"];
   var THEME_KEY = "whoami-theme";
 
@@ -296,6 +309,37 @@
       c.dim(
         "Tip: type a command and hit Enter. <Tab> completes, ↑/↓ = history.",
       ),
+    ];
+  };
+
+  // A tongue-in-cheek BIOS/POST scroll, shown once before the banner on boot.
+  // Plain text (wraps like the welcome block), kept narrow so it fits phones.
+  Terminal.prototype.postLines = function () {
+    var name = (FS.PROFILE && FS.PROFILE.name) || "whoami";
+    var year = new Date().getFullYear();
+    // "Label ........ [ OK ]" — dot leader is sized from the plain label.
+    function probe(label, status) {
+      var dots = new Array(Math.max(3, 34 - label.length)).join(".");
+      return c.dim(label + " " + dots + " ") + c.green("[ " + status + " ]");
+    }
+    return [
+      U.wrap(c.accent("whoami BIOS v2.6 — vanilla edition"), "bold"),
+      c.dim("(c) 1994-" + year + "  No Frameworks, Inc.  All rights reserved."),
+      "",
+      c.green("CPU") + c.dim("     : ") + "VanillaJS Core(tm) — 0 dependencies",
+      c.green("Memory") + c.dim("  : ") + c.accent("65536K") + c.dim(" OK"),
+      c.green("Cache") + c.dim("   : ") + "L1 localStorage " + c.dim("(theme remembered)"),
+      "",
+      probe("Detecting input devices", "OK"),
+      probe("Initializing display adapter", "OK"),
+      probe("Mounting filesystem (read-only)", "OK"),
+      probe("Loading profile: " + name, "OK"),
+      "",
+      c.dim("Boot device: ") +
+        c.green("RESUME0") +
+        c.dim(" — starting ") +
+        c.green(shellName()) +
+        c.dim("..."),
     ];
   };
 
@@ -667,7 +711,8 @@
   }
 
   /* ----- boot ------------------------------------------------------- */
-  // Reveal the MOTD line-by-line, then hand control to the user.
+  // Scroll a fake BIOS/POST, then reveal the MOTD line-by-line, then hand
+  // control to the user. A key or click skips straight to the prompt.
   Terminal.prototype.boot = function () {
     var self = this;
     this.loadTheme();
@@ -675,24 +720,36 @@
     this.renderInput();
     this.focus();
 
+    var post = this.postLines();
     var banner = this.motdBannerLines();
     var lines = this.motdTextLines();
+
+    // DOM order top-to-bottom: POST scroll, then banner, then welcome text.
+    var postBox = this.write("", "post"); // boot log: wraps normally
     var artBox = this.write("", "art"); // banner: doesn't wrap, fits to width
     var txtBox = this.write(""); // welcome text: wraps normally
 
-    // a flat reveal timeline across both boxes
+    // One flat reveal timeline; each step carries its own delay so the POST
+    // can rattle by quickly while the banner takes its time.
     var steps = [];
+    post.forEach(function (_, n) {
+      steps.push({ box: postBox, html: post.slice(0, n + 1).join("\n"), delay: 24 });
+    });
+    if (steps.length) {
+      steps[steps.length - 1].delay = 360; // a beat between POST and the banner
+    }
     banner.forEach(function (_, n) {
-      steps.push({ box: artBox, html: banner.slice(0, n + 1).join("\n") });
+      steps.push({ box: artBox, html: banner.slice(0, n + 1).join("\n"), delay: 55 });
     });
     lines.forEach(function (_, n) {
-      steps.push({ box: txtBox, html: lines.slice(0, n + 1).join("\n") });
+      steps.push({ box: txtBox, html: lines.slice(0, n + 1).join("\n"), delay: 28 });
     });
 
     var i = 0,
       skipped = false;
 
     function dump() {
+      postBox.innerHTML = post.join("\n");
       artBox.innerHTML = banner.join("\n");
       txtBox.innerHTML = lines.join("\n");
       finish();
@@ -718,6 +775,12 @@
       dump();
     }
 
+    // Reduced-motion: show it all at once, no reveal, no skip handlers needed.
+    if (prefersReducedMotion()) {
+      dump();
+      return;
+    }
+
     global.addEventListener("keydown", skip, true);
     this.els.root.addEventListener("mousedown", skip, true);
 
@@ -732,7 +795,7 @@
       steps[i].box.innerHTML = steps[i].html;
       self.scroll();
       i++;
-      setTimeout(tick, i <= banner.length ? 55 : 28); // banner a touch slower
+      setTimeout(tick, steps[i - 1].delay);
     })();
   };
 
