@@ -479,6 +479,19 @@ a:hover { text-decoration-style: solid; }
 
 /* ----- small screens: go full-bleed --------------------------------- */
 @media (max-width: 680px) {
+  /* Lock the page itself to the *visible* viewport and never let it scroll.
+     The terminal already tracks --vvh and scrolls its content inside .screen,
+     so the document never needs to scroll. Without this, html/body keep their
+     full layout-viewport height (which the on-screen keyboard does NOT shrink —
+     it just overlays it), so when the keyboard opens the body stays tall while
+     the terminal shrinks above it, leaving empty space below that you can
+     scroll/pan into. Pinning the height and hiding overflow removes it. */
+  html, body {
+    height: 100vh;
+    height: 100dvh;
+    height: var(--vvh, 100dvh);
+    overflow: hidden;
+  }
   body {
     padding: 0;
     font-size: 13px;
