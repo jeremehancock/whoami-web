@@ -34,7 +34,7 @@ __      _| |__   ___   __ _ _ __ ___ (_)
 
 ## Screenshot
 
-![whoami screenshot](screenshot.png)
+![whoami screenshot](screenshot-updated.png)
 
 ## Commands
 
