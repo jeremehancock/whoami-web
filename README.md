@@ -17,38 +17,37 @@ __      _| |__   ___   __ _ _ __ ___ (_)
 
 ## Features
 
-- 🖥️  **Looks like a real terminal** — window chrome, blinking block cursor,
+- 🖥️ **Looks like a real terminal** — window chrome, blinking block cursor,
   coloured output, scanlines on the retro themes.
-- ⚡  **Boots like one too** — a tongue-in-cheek BIOS/POST scroll plays before
+- ⚡ **Boots like one too** — a tongue-in-cheek BIOS/POST scroll plays before
   the welcome banner (any key or click skips it; honours reduced-motion).
-- 📂  **A virtual filesystem** you actually walk through with `ls` / `cd` / `cat`
+- 📂 **A virtual filesystem** you actually walk through with `ls` / `cd` / `cat`
   (relative paths, `..`, `~`, and `/` all work).
-- 📖  **`man` pages** and `whatis` for every built-in command.
-- ⌨️  **Real shell ergonomics** — `Tab` completion (commands *and* paths),
+- 📖 **`man` pages** and `whatis` for every built-in command.
+- ⌨️ **Real shell ergonomics** — `Tab` completion (commands _and_ paths),
   `↑`/`↓` history, and `Ctrl+L` / `Ctrl+C` / `Ctrl+U` / `Ctrl+A` / `Ctrl+E`.
-- 🎨  **5 themes** — `default`, `matrix`, `amber`, `dracula`, `light`
+- 🎨 **5 themes** — `default`, `matrix`, `amber`, `dracula`, `light`
   (try `theme amber`; your pick is remembered).
-- 🔤  **`figlet`** — render any text as big ASCII letters in 7 bundled fonts
+- 🔤 **`figlet`** — render any text as big ASCII letters in 7 bundled fonts
   (`figlet -f slant Hire me!`; run `figlet -l` to see them all).
-- 🥚  **Easter eggs** — `sudo`, `cowsay`, `neofetch`, `vim`, `sl` (mistype
-  `ls` and watch), and a `.secret/` worth finding.
-  
+- 🥚 **Easter eggs** — try some things and see what you find. 😁
+
 ## Screenshot
 
 ![whoami screenshot](screenshot.png)
 
 ## Commands
 
-| | |
-|---|---|
-| `whoami` | the short version of me |
-| `ls` · `cd` · `pwd` · `tree` · `find` | get around the filesystem |
-| `cat` · `grep` | read & search files |
-| `man` · `whatis` · `help` | figure out what everything does |
-| `neofetch` | the obligatory flex |
-| `theme` | change the colour scheme |
-| `echo` · `date` · `history` · `uname` · `uptime` · `clear` · `motd` | the usual suspects |
-| `cowsay` · `banner` · `figlet` · `sudo` · `vim` … | for fun |
+|                                                                     |                                 |
+| ------------------------------------------------------------------- | ------------------------------- |
+| `whoami`                                                            | the short version of me         |
+| `ls` · `cd` · `pwd` · `tree` · `find`                               | get around the filesystem       |
+| `cat` · `grep`                                                      | read & search files             |
+| `man` · `whatis` · `help`                                           | figure out what everything does |
+| `neofetch`                                                          | the obligatory flex             |
+| `theme`                                                             | change the colour scheme        |
+| `echo` · `date` · `history` · `uname` · `uptime` · `clear` · `motd` | the usual suspects              |
+| `cowsay` · `banner` · `figlet` · `sudo` · `vim` …                   | for fun                         |
 
 Type `help` in the terminal for the full list, or `man <command>` for details.
 
@@ -61,7 +60,7 @@ can only **fetch when the page is served over HTTP** — so serve it:
 python3 -m http.server 8000   # then visit http://localhost:8000
 ```
 
-You *can* still double-click `index.html`, but `file://` URLs can't fetch
+You _can_ still double-click `index.html`, but `file://` URLs can't fetch
 `content.json`, so you'll see a small built-in fallback instead of your content.
 (Any real web host serves over HTTP, so deployment just works.)
 
@@ -80,31 +79,34 @@ Edit it and reload — no build step.
 ```jsonc
 {
   "title": "whoami — Your Name", // the browser-tab title (falls back to index.html)
-  "user": "guest",            // the visitor's name in the prompt
-  "host": "whoami",           // guest@whoami
-  "profile": {                // shown by `whoami` and `neofetch`
+  "user": "guest", // the visitor's name in the prompt
+  "host": "whoami", // guest@whoami
+  "profile": {
+    // shown by `whoami` and `neofetch`
     "name": "Your Name",
     "role": "What you do",
     "tagline": "One-liner about you.",
     "github": "https://github.com/you",
-    "email": "you@example.com"
+    "email": "you@example.com",
   },
-  "tree": {                   // this object *is* the filesystem
+  "tree": {
+    // this object *is* the filesystem
     "README.md": ["A file as", "an array of lines."],
-    "about": {                            // a nested object is a directory
+    "about": {
+      // a nested object is a directory
       "bio.txt": "A file as a single string.",
-      "story.md": { "file": "content/story.md" }   // load from a real file
-    }
-  }
+      "story.md": { "file": "content/story.md" }, // load from a real file
+    },
+  },
 }
 ```
 
 **A file** can be written three ways — pick whatever's comfortable:
 
-| In `content.json`                | Meaning                                   |
-|----------------------------------|-------------------------------------------|
-| `"name": "one line of text"`     | inline file, single string                |
-| `"name": ["line", "line", ...]`  | inline file, one array entry per line     |
+| In `content.json`                    | Meaning                                 |
+| ------------------------------------ | --------------------------------------- |
+| `"name": "one line of text"`         | inline file, single string              |
+| `"name": ["line", "line", ...]`      | inline file, one array entry per line   |
 | `"name": { "file": "content/x.md" }` | content loaded from a real `.md`/`.txt` |
 
 **A directory** is just a nested object (anything without `file`/`content`).
