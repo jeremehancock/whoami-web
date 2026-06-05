@@ -813,7 +813,8 @@
       steps.push({ html: post.slice(0, n + 1).join("\n"), delay: 24 });
     });
     if (steps.length) {
-      steps[steps.length - 1].delay = 1000;
+      // hold on the finished boot screen long enough to actually read it
+      steps[steps.length - 1].delay = 1800;
     }
     var i = 0;
     (function tick() {
@@ -823,11 +824,11 @@
       if (i >= steps.length) {
         self.clearScreen(); // POST done -> wipe the boot screen
         setTimeout(function () {
-          // a brief black screen, then the OS loads
+          // a black screen beat, like a real machine handing off to the OS
           if (!skipped) {
             loadTerminal(true);
           }
-        }, 250);
+        }, 650);
         return;
       }
       postBox.innerHTML = steps[i].html;
