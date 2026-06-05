@@ -47,8 +47,8 @@
         "file": "content/about/bio.txt"
       },
       "now.txt": [
-        "now  —  what I'm up to",
-        "======================",
+        "about - now (what I am up to)",
+        "=============================",
         "",
         "  * Software Developer II at Liquid Web (customer control panels).",
         "  * Tinkering with Plex/Jellyfin tools: CLIX, Ludanta, Posteria.",
