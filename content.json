@@ -121,8 +121,8 @@
         "file": "content/resume/experience.txt"
       },
       "education.txt": [
-        "education",
-        "=========",
+        "resume - education",
+        "==================",
         "",
         "Northwestern Oklahoma State University (NWOSU)",
         "  B.S., Business Administration",
@@ -131,8 +131,8 @@
     },
     "contact": {
       "links.txt": [
-        "contact",
-        "=======",
+        "contact - links",
+        "===============",
         "",
         "  email      michael@jeremehancock.com",
         "  site       https://jeremehancock.com",

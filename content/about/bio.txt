@@ -1,3 +1,6 @@
+about - bio
+===========
+
 Hi, I'm Michael Jereme Hancock — though most people just call me Jereme.
 I'm just a guy who likes to tinker.
 
