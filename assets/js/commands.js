@@ -413,6 +413,31 @@
     },
   });
 
+  /* ---- tui --------------------------------------------------------- */
+  def("tui", {
+    group: "Getting around",
+    summary: "browse everything in a full-screen TUI",
+    usage: "tui [path]",
+    description:
+      "Open a full-screen, panel-based browser for everything on this site —\n" +
+      "another way to get around without typing commands. A Navigator pane\n" +
+      "lists the current folder; a Preview pane shows the selected file (or a\n" +
+      "folder's contents). It reads the very same content the shell does.\n\n" +
+      "Move with the arrow keys (or hjkl), Enter/-> to open, <-/Backspace to\n" +
+      "go up, `/` to search, `.` to toggle hidden files, `t` to change theme,\n" +
+      "`?` for the full key list, and `q` (or Esc) to drop back to the shell.\n" +
+      "Mouse and touch work too. Pass a PATH to start there.",
+    examples: "tui\ntui projects\ntui resume",
+    see: "ls, cd, tree",
+    run: function (ctx) {
+      if (!global.tui) {
+        return c.red("tui: the TUI is unavailable in this environment.");
+      }
+      global.tui.open(ctx.args[0]);
+      return undefined;
+    },
+  });
+
   /* ---- cat --------------------------------------------------------- */
   def("cat", {
     group: "Reading",

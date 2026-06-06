@@ -24,6 +24,10 @@ __      _| |__   ___   __ _ _ __ ___ (_)
   (plays through in full; honours reduced-motion).
 - 📂 **A virtual filesystem** you actually walk through with `ls` / `cd` / `cat`
   (relative paths, `..`, `~`, and `/` all work).
+- 🧭 **A full-screen TUI** (`tui`) — a panel-based browser (Navigator + Preview
+  + status bar) for the very same content, for visitors who'd rather arrow
+  around than type. Arrow keys/`hjkl`, `/` to search, `t` for themes, `?` for
+  help, `q` to drop back to the shell. Mouse and touch work too.
 - 📖 **`man` pages** and `whatis` for every built-in command.
 - ⌨️ **Real shell ergonomics** — `Tab` completion (commands _and_ paths),
   `↑`/`↓` history, and `Ctrl+L` / `Ctrl+C` / `Ctrl+U` / `Ctrl+A` / `Ctrl+E`.
@@ -46,6 +50,7 @@ __      _| |__   ___   __ _ _ __ ___ (_)
 |                                                                     |                                 |
 | ------------------------------------------------------------------- | ------------------------------- |
 | `whoami`                                                            | the short version of me         |
+| `tui`                                                               | browse everything in a full-screen TUI |
 | `ls` · `cd` · `pwd` · `tree` · `find`                               | get around the filesystem       |
 | `cat` · `grep`                                                      | read & search files             |
 | `man` · `whatis` · `help`                                           | figure out what everything does |
@@ -150,6 +155,7 @@ assets/
     ├── filesystem.js    the filesystem engine (builds the tree, resolves paths)
     ├── commands.js      every command + its man page
     ├── terminal.js      the shell engine (input, history, completion, quick-bar)
+    ├── tui.js           the full-screen panel TUI (the `tui` command)
     ├── window.js        desktop window chrome (move, resize, min/max/close)
     └── main.js          loads content.json, then wires it up and boots
 ```
