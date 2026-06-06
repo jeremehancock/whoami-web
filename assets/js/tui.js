@@ -205,6 +205,15 @@
       }
     });
 
+    // Tapping the help overlay closes it (there's no key to press on mobile,
+    // and the overlay covers the status bar's `?` button).
+    this.els.help.addEventListener("click", function () {
+      if (self.helpOpen) {
+        self.helpOpen = false;
+        self.render();
+      }
+    });
+
     this._onKey = this._onKey.bind(this);
   };
 
@@ -269,6 +278,12 @@
     // Hand control back to the shell.
     this.term.ready = true;
     this.term.focus();
+  };
+
+  // Is the TUI currently showing? (the shell checks this before refocusing its
+  // own input, so a click that opened the TUI doesn't re-pop the keyboard).
+  TUI.prototype.isOpen = function () {
+    return this.open_;
   };
 
   /* ----- current directory + items ---------------------------------- */
@@ -888,7 +903,7 @@
         })
         .join("") +
       '<div class="tui-help-foot">' +
-      U.esc("press any key to close") +
+      U.esc("tap anywhere or press a key to close") +
       "</div>" +
       "</div>";
   };

@@ -112,6 +112,20 @@
       if (e.target.closest && e.target.closest("a")) {
         return;
       }
+      // The TUI overlays the terminal and owns the keyboard while it's open.
+      // A click that opened it (e.g. the quick-bar `tui` chip) bubbles up here;
+      // refocusing the shell input now would re-pop the mobile keyboard behind
+      // the TUI, so leave focus alone while the TUI is up.
+      if (global.tui && global.tui.isOpen && global.tui.isOpen()) {
+        return;
+      }
+      // Quick-bar taps run commands; they must NOT pop the keyboard. Only a tap
+      // on the terminal itself should bring it up, so the keyboard doesn't jump
+      // in the way every time you tap a chip like `whoami`. (Its own handler
+      // does the work.)
+      if (e.target.closest && e.target.closest(".quickbar")) {
+        return;
+      }
       if (String(global.getSelection()) === "") {
         self.focus();
       }
@@ -172,8 +186,9 @@
       bar.appendChild(b);
     });
 
-    // Keep the input focused so tapping a chip never closes the keyboard or
-    // moves the caret; we act on the click instead.
+    // Don't let a chip tap steal/move focus: if the keyboard is already up it
+    // stays up (and the caret doesn't jump); if it's down, the chip won't open
+    // it. The user opens the keyboard by tapping the terminal itself.
     bar.addEventListener("mousedown", function (e) {
       if (e.target.closest(".qchip")) {
         e.preventDefault();
@@ -184,7 +199,6 @@
       if (!b) {
         return;
       }
-      self.focus();
       if (b.dataset.key) {
         self.quickKey(b.dataset.key);
       } else if ("run" in b.dataset) {
@@ -214,7 +228,7 @@
     input.value = input.value.slice(0, pos) + text + input.value.slice(pos);
     this._caret(pos + text.length);
     this.renderInput();
-    this.focus();
+    // Don't force the keyboard open — the user taps the terminal to type.
   };
 
   Terminal.prototype.quickKey = function (name) {
