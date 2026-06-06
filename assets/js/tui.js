@@ -275,9 +275,14 @@
     } catch (e) {
       /* ignore */
     }
-    // Hand control back to the shell.
+    // Hand control back to the shell. Don't force the keyboard open on mobile —
+    // _autofocus only refocuses on desktop; on touch the user taps to type.
     this.term.ready = true;
-    this.term.focus();
+    if (this.term._autofocus) {
+      this.term._autofocus();
+    } else {
+      this.term.focus();
+    }
   };
 
   // Is the TUI currently showing? (the shell checks this before refocusing its
