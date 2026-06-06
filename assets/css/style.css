@@ -718,4 +718,37 @@ a:hover { text-decoration-style: solid; }
   }
   .tui-header { flex-wrap: wrap; gap: 2px 8px; white-space: normal; }
   .tui-crumb { flex-basis: 100%; }
+
+  /* Match the terminal's quick-bar: a single inline, horizontally-scrollable
+     row of equally-sized chip buttons — not a wrapping cloud of key hints. */
+  .tui-status {
+    flex-wrap: nowrap;
+    gap: 6px;
+    padding: 7px 10px;
+    padding-bottom: max(7px, env(safe-area-inset-bottom));
+  }
+  .tui-hint {
+    flex: 0 0 auto;
+    display: inline-block;
+    white-space: nowrap;
+    font-size: 12.5px;
+    line-height: 1;
+    color: var(--fg);
+    background: color-mix(in srgb, var(--fg) 7%, transparent);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 8px 11px;
+  }
+  /* the chip itself is the button now, so drop the inner key-cap outline */
+  .tui-hint .tui-key {
+    border: 0;
+    padding: 0;
+    background: none;
+    color: var(--accent);
+  }
+  .tui-hint:active {
+    background: color-mix(in srgb, var(--accent) 30%, transparent);
+    border-color: var(--accent);
+    color: var(--white);
+  }
 }
