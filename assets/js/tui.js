@@ -576,9 +576,30 @@
     e.preventDefault();
   };
 
+  // Move the selection one row, whether browsing or in a search result list.
+  // (Used by the keyboard and by the tappable up/down buttons in the status bar.)
+  TUI.prototype._navButton = function (delta) {
+    if (this.searchMode) {
+      var n = this.searchResults.length;
+      if (!n) {
+        return;
+      }
+      this.searchIndex = (this.searchIndex + delta + n) % n;
+      this.render();
+    } else {
+      this._move(delta);
+    }
+  };
+
   // Map a status-bar button to the same action as its key.
   TUI.prototype._action = function (act) {
     switch (act) {
+      case "move-up":
+        this._navButton(-1);
+        break;
+      case "move-down":
+        this._navButton(1);
+        break;
       case "open":
         this.searchMode ? this._openSearchResult() : this._open();
         break;
@@ -760,13 +781,15 @@
     if (this.searchMode) {
       hints = [
         ["type", "filter"],
+        ["↑", "prev", "move-up"],
+        ["↓", "next", "move-down"],
         ["enter", "go", "open"],
-        ["up/dn", "pick"],
         ["esc", "cancel", "search"],
       ];
     } else {
       hints = [
-        ["up/dn", "move"],
+        ["↑", "up", "move-up"],
+        ["↓", "down", "move-down"],
         ["enter", "open", "open"],
         ["bksp", "up", "up"],
         ["/", "search", "search"],
