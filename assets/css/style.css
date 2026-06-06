@@ -716,8 +716,13 @@ a:hover { text-decoration-style: solid; }
     border-right: 0;
     border-bottom: 1px solid var(--border);
   }
-  .tui-header { flex-wrap: wrap; gap: 2px 8px; white-space: normal; }
-  .tui-crumb { flex-basis: 100%; }
+  /* The desktop one-liner (name . role . tagline . path) is too cramped on a
+     phone and wraps awkwardly — show just the name and tagline, each on its
+     own line. The current path is still visible in the Navigator pane title. */
+  .tui-header { display: block; white-space: normal; }
+  .tui-id { display: block; }
+  .tui-name, .tui-tag { display: block; }
+  .tui-role, .tui-dot, .tui-crumb { display: none; }
 
   /* Match the terminal's quick-bar: a single inline, horizontally-scrollable
      row of equally-sized chip buttons — not a wrapping cloud of key hints. */
