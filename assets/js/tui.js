@@ -820,7 +820,6 @@
     var hints;
     if (this.searchMode) {
       hints = [
-        ["type", "filter"],
         ["↑", "prev", "move-up"],
         ["↓", "next", "move-down"],
         ["enter", "go", "open"],
