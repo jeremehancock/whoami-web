@@ -75,6 +75,11 @@
     global.term = term; // handy for poking at it from the console
     term.boot();
 
+    // the panel-based TUI browser (launched by the `tui` command)
+    if (global.TUI) {
+      global.tui = new global.TUI(term, { root: els.root });
+    }
+
     // desktop window chrome: move / resize / minimize / maximize / close
     if (global.WindowManager) {
       global.wm = new global.WindowManager(term, {

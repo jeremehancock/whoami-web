@@ -56,6 +56,7 @@
     { key: "down", label: "↓", title: "Next command" },
     { sep: true },
     { run: "whoami" },
+    { run: "tui" },
     { run: "ls" },
     { run: "cd ..", label: "cd .." },
     { ins: "cat ", label: "cat" },
@@ -319,6 +320,7 @@
       row("whoami", "the short version of me"),
       row("ls / cd", "explore the filesystem"),
       row("cat <file>", "read anything you find"),
+      row("tui", "browse it all in a full-screen TUI"),
       row("help", "every command I know"),
       "",
       c.dim(
