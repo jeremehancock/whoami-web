@@ -320,7 +320,7 @@
       row("whoami", "the short version of me"),
       row("ls / cd", "explore the filesystem"),
       row("cat <file>", "read anything you find"),
-      row("tui", "browse it all in a full-screen TUI"),
+      row("tui", "browse in a full-screen TUI"),
       row("help", "every command I know"),
       "",
       c.dim(
@@ -345,7 +345,10 @@
       "",
       c.green("CPU") + c.dim("     : ") + U.cpu(),
       c.green("Memory") + c.dim("  : ") + c.accent("65536K") + c.dim(" OK"),
-      c.green("Cache") + c.dim("   : ") + "L1 localStorage " + c.dim("(theme remembered)"),
+      c.green("Cache") +
+        c.dim("   : ") +
+        "L1 localStorage " +
+        c.dim("(theme remembered)"),
       "",
       probe("Detecting input devices", "OK"),
       probe("Initializing display adapter", "OK"),
@@ -496,7 +499,9 @@
     var ex = this._expandHistory(raw);
     if (ex && ex.error) {
       this.echoLine(raw);
-      this.write(c.red(shellName() + ": " + U.esc(ex.token) + ": event not found"));
+      this.write(
+        c.red(shellName() + ": " + U.esc(ex.token) + ": event not found"),
+      );
       this.histIndex = this.history.length;
       this.draft = "";
       this.renderPrompt();
@@ -815,10 +820,18 @@
       }
       var steps = [];
       banner.forEach(function (_, n) {
-        steps.push({ box: artBox, html: banner.slice(0, n + 1).join("\n"), delay: 55 });
+        steps.push({
+          box: artBox,
+          html: banner.slice(0, n + 1).join("\n"),
+          delay: 55,
+        });
       });
       lines.forEach(function (_, n) {
-        steps.push({ box: txtBox, html: lines.slice(0, n + 1).join("\n"), delay: 28 });
+        steps.push({
+          box: txtBox,
+          html: lines.slice(0, n + 1).join("\n"),
+          delay: 28,
+        });
       });
       var i = 0;
       (function tick() {
