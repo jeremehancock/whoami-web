@@ -112,6 +112,13 @@
       if (e.target.closest && e.target.closest("a")) {
         return;
       }
+      // The TUI overlays the terminal and owns the keyboard while it's open.
+      // A click that opened it (e.g. the quick-bar `tui` chip) bubbles up here;
+      // refocusing the shell input now would re-pop the mobile keyboard behind
+      // the TUI, so leave focus alone while the TUI is up.
+      if (global.tui && global.tui.isOpen && global.tui.isOpen()) {
+        return;
+      }
       if (String(global.getSelection()) === "") {
         self.focus();
       }

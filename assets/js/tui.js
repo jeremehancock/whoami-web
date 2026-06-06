@@ -271,6 +271,12 @@
     this.term.focus();
   };
 
+  // Is the TUI currently showing? (the shell checks this before refocusing its
+  // own input, so a click that opened the TUI doesn't re-pop the keyboard).
+  TUI.prototype.isOpen = function () {
+    return this.open_;
+  };
+
   /* ----- current directory + items ---------------------------------- */
   // Build the rows shown in the navigator for the current directory: an
   // optional ".." up-entry, then directories, then files (each alpha-sorted).
