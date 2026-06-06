@@ -137,6 +137,21 @@
     this.els.input.focus();
   };
 
+  // Focus the input only on fine-pointer (desktop) devices. On touch we never
+  // force the keyboard open — it should appear only when the user taps the
+  // terminal — so boot/reset/reboot don't pop it. (Whatever focus state the
+  // input already had is left untouched.)
+  Terminal.prototype._autofocus = function () {
+    try {
+      if (global.matchMedia && global.matchMedia("(pointer: coarse)").matches) {
+        return;
+      }
+    } catch (e) {
+      /* ignore */
+    }
+    this.focus();
+  };
+
   Terminal.prototype.loadTheme = function () {
     var saved;
     try {
@@ -826,7 +841,7 @@
     this.loadTheme();
     this.renderPrompt();
     this.renderInput();
-    this.focus();
+    this._autofocus();
 
     var banner = this.motdBannerLines();
     var lines = this.motdTextLines();
@@ -840,7 +855,7 @@
       self.els.input.value = "";
       self.renderInput();
       self.scroll();
-      self.focus();
+      self._autofocus();
     }
 
     // The end state: a freshly loaded terminal — the MOTD on a clean screen.
