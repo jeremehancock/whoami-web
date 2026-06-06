@@ -704,6 +704,21 @@ a:hover { text-decoration-style: solid; }
 .tui-help-desc { flex: 1 1 auto; color: var(--fg); }
 .tui-help-foot { margin-top: 10px; color: var(--gray); font-size: 12px; text-align: center; }
 
+/* ----- off-screen search field (summons the mobile keyboard) --------- */
+.tui-search-input {
+  position: absolute;
+  top: 0; left: 0;
+  width: 1px; height: 1px;
+  padding: 0; border: 0;
+  opacity: 0;
+  outline: none;
+  background: transparent;
+  color: transparent;
+  z-index: -1;
+  /* 16px stops iOS Safari from zooming the page when the keyboard opens */
+  font-size: 16px;
+}
+
 /* ----- small screens: stack the panes ------------------------------- */
 @media (max-width: 680px) {
   .tui { top: 34px; }

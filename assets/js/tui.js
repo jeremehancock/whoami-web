@@ -101,7 +101,16 @@
       "  </section>" +
       "</div>" +
       '<div class="tui-status" id="tui-status"></div>' +
-      '<div class="tui-help" id="tui-help" hidden></div>';
+      '<div class="tui-help" id="tui-help" hidden></div>' +
+      // A real (off-screen) text field, focused only while searching, so the
+      // mobile on-screen keyboard appears exactly when it's needed. Its `input`
+      // event is the single source of truth for the search query (mobile soft
+      // keyboards don't fire reliable keydown events, so we can't read keys).
+      '<input class="tui-search-input" id="tui-search" type="text" ' +
+      'autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" ' +
+      'enterkeyhint="search" aria-label="Search" tabindex="-1" ' +
+      'data-1p-ignore data-lpignore="true" data-bwignore="true" ' +
+      'data-form-type="other" data-protonpass-ignore="true" />';
     this.root.appendChild(el);
 
     this.els = {
@@ -115,6 +124,7 @@
       content: el.querySelector("#tui-content"),
       status: el.querySelector("#tui-status"),
       help: el.querySelector("#tui-help"),
+      search: el.querySelector("#tui-search"),
     };
 
     this._wire();
@@ -127,6 +137,19 @@
     // refocus the hidden input and pop the mobile keyboard). Links still work.
     this.els.tui.addEventListener("click", function (e) {
       e.stopPropagation();
+    });
+
+    // The search field drives the query: typing here (incl. via the mobile
+    // keyboard) updates the live results. Navigation keys (Enter/arrows/Esc)
+    // are still handled by the global key handler.
+    this.els.search.addEventListener("input", function () {
+      if (!self.searchMode) {
+        return;
+      }
+      self.searchQuery = self.els.search.value;
+      self.searchIndex = 0;
+      self._runSearch();
+      self.render();
     });
 
     // Click a navigator row: select it; clicking the already-selected row (or
@@ -207,10 +230,15 @@
     this.helpOpen = false;
     this.focusPane = "nav";
 
-    // Hand the keyboard to the TUI; the shell sits quiet underneath.
+    // Hand the keyboard to the TUI; the shell sits quiet underneath. Drop focus
+    // from the shell's input (and anything else holding it) so the mobile
+    // on-screen keyboard closes — it's only needed once you start a search.
     this.term.ready = false;
     try {
       this.term.els.input.blur();
+      if (document.activeElement && document.activeElement.blur) {
+        document.activeElement.blur();
+      }
     } catch (e) {
       /* ignore */
     }
@@ -233,6 +261,11 @@
     this.open_ = false;
     global.removeEventListener("keydown", this._onKey, true);
     this.els.tui.hidden = true;
+    try {
+      this.els.search.blur();
+    } catch (e) {
+      /* ignore */
+    }
     // Hand control back to the shell.
     this.term.ready = true;
     this.term.focus();
@@ -368,14 +401,28 @@
     this.searchMode = true;
     this.searchQuery = "";
     this.searchIndex = 0;
+    this.els.search.value = "";
     this._runSearch();
     this.render();
+    // Focus the hidden field so the on-screen keyboard opens on mobile. This
+    // must run inside the triggering gesture (the `/` key or the search button).
+    try {
+      this.els.search.focus();
+    } catch (e) {
+      /* ignore */
+    }
   };
 
   TUI.prototype._endSearch = function () {
     this.searchMode = false;
     this.searchQuery = "";
     this.searchResults = [];
+    this.els.search.value = "";
+    try {
+      this.els.search.blur(); // let the mobile keyboard close
+    } catch (e) {
+      /* ignore */
+    }
     this.render();
   };
 
@@ -543,6 +590,9 @@
     }
   };
 
+  // In search mode the query itself comes from the focused search field's
+  // `input` event; here we only handle the navigation keys (so the caret in the
+  // field isn't disturbed and characters/Backspace fall through to the field).
   TUI.prototype._searchKey = function (e) {
     var k = e.key;
     if (k === "Escape") {
@@ -560,18 +610,8 @@
           (this.searchIndex - 1 + this.searchResults.length) % this.searchResults.length;
         this.render();
       }
-    } else if (k === "Backspace") {
-      this.searchQuery = this.searchQuery.slice(0, -1);
-      this.searchIndex = 0;
-      this._runSearch();
-      this.render();
-    } else if (k.length === 1) {
-      this.searchQuery += k;
-      this.searchIndex = 0;
-      this._runSearch();
-      this.render();
     } else {
-      return; // an unhandled key (e.g. a modifier) — let it be
+      return; // characters / Backspace / modifiers -> let the field handle them
     }
     e.preventDefault();
   };
