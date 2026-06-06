@@ -200,13 +200,35 @@
         return;
       }
       if (b.dataset.key) {
+        // typing helpers (Tab / history) — leave focus as-is so the keyboard
+        // stays up while you're composing a command
         self.quickKey(b.dataset.key);
       } else if ("run" in b.dataset) {
         self.quickRun(b.dataset.run);
+        self.dismissKeyboard(); // command ran — don't leave the keyboard up
       } else if ("ins" in b.dataset) {
         self.quickInsert(b.dataset.ins);
+        self.dismissKeyboard(); // tap the terminal when you're ready to type
       }
     });
+  };
+
+  // On touch devices, drop focus so the on-screen keyboard closes (or never
+  // opens) after a quick-bar command. A real mobile browser will focus the
+  // hidden input on tap even though we never call focus(), so — like the `tui`
+  // chip — we blur it back. Skipped on fine-pointer (desktop) devices, where
+  // the input should keep focus so you can carry on typing.
+  Terminal.prototype.dismissKeyboard = function () {
+    try {
+      if (global.matchMedia && global.matchMedia("(pointer: coarse)").matches) {
+        this.els.input.blur();
+        if (document.activeElement && document.activeElement.blur) {
+          document.activeElement.blur();
+        }
+      }
+    } catch (e) {
+      /* ignore */
+    }
   };
 
   Terminal.prototype.quickRun = function (cmd) {
