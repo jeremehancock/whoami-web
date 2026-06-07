@@ -1517,11 +1517,10 @@
   });
 
   /* ---- python (easter egg) ----------------------------------------- */
-  // You asked for Python; you get a python. In the spirit of `sl`, a slithery
-  // ASCII snake undulates across the screen instead of dropping you into an
-  // interpreter. The body is a sine wave whose phase advances each frame, so
-  // the diagonal `/` `\` `~` segments ripple like a real slither; the head
-  // leads on the left with a flicking forked tongue.
+  // You asked for Python; you get a python. In the spirit of `sl`, a coiled
+  // ASCII snake slithers across the screen instead of dropping you into an
+  // interpreter. It's a fixed sprite (eyes + snout up front, looped body
+  // behind) that scrolls past, the same way the `sl` locomotive does.
   def("python", {
     group: "Fun",
     hidden: true,
@@ -1554,71 +1553,44 @@
         /* not measurable (e.g. headless) — keep the default */
       }
 
-      var AMP = 2; // wiggle reaches 2 rows above/below the centre line
-      var ROWS = AMP * 2 + 1; // 5 rows tall
-      var LEN = 34; // body length, in characters
-      // Keep AMP*FREQ < 1 so the rounded row never jumps more than one step
-      // between columns — that's what keeps the slither line unbroken.
-      var FREQ = 0.35;
+      // The coiled snake sprite. Eyes + snout lead on the left; the looped
+      // body trails off to the right. It's a fixed picture that scrolls across
+      // the screen, exactly like the `sl` locomotive — no per-row wiggle, so
+      // nothing stray ever flickers along the bottom edge.
+      var SNAKE = [
+        "   _________         _________",
+        "  /         \\       /         \\",
+        " /  /~~~~~\\  \\     /  /~~~~~\\  \\",
+        " |  |     |  |     |  |     |  |",
+        " |  |     |  |     |  |     |  |",
+        " |  |     |  |     |  |     |  |         /",
+        " |  |     |  |     |  |     |  |       //",
+        "(o  o)    \\  \\_____/  /     \\  \\_____/ /",
+        " \\__/      \\         /       \\        /",
+        "  |         ~~~~~~~~~         ~~~~~~~~",
+        "  ^",
+      ];
+      var snakeW = SNAKE.reduce(function (m, l) {
+        return Math.max(m, l.length);
+      }, 0);
 
-      // The vertical row of body segment i, riding the travelling sine wave.
-      function wave(i, phase) {
-        return AMP + Math.round(AMP * Math.sin(i * FREQ + phase));
-      }
-
-      // Render the snake with its head at column headX, body trailing to the
-      // right, undulating with the given phase. Returns ROWS lines.
-      function paint(headX, phase) {
-        var grid = [],
-          r;
-        for (r = 0; r < ROWS; r++) {
-          grid.push(new Array(cols + 1).join(" ").split(""));
-        }
-        function put(x, y, ch) {
-          if (x >= 0 && x < cols && y >= 0 && y < ROWS) {
-            grid[y][x] = ch;
-          }
-        }
-        // Body: i = 1 (just behind the head) out to LEN (tail tip). Each cell's
-        // glyph follows the slope toward the next cell — climbing, falling, or
-        // level — so the line reads as one continuous, slithering body.
-        for (var i = 1; i <= LEN; i++) {
-          var here = wave(i, phase);
-          var ch;
-          if (i === LEN) {
-            ch = "~"; // tapered tail tip
-          } else {
-            var next = wave(i + 1, phase);
-            ch = next > here ? "\\" : next < here ? "/" : "~";
-          }
-          put(headX + i, here, ch);
-        }
-        // Head leads on the left with an open mouth and a forked tongue that
-        // flicks in and out as it goes.
-        var hy = wave(0, phase);
-        put(headX, hy, "<");
-        put(headX - 1, hy, Math.floor(phase) % 2 ? "~" : "=");
-        return grid
-          .map(function (row) {
-            return row.join("").replace(/\s+$/, "");
-          })
-          .join("\n");
-      }
-
-      // The art has literal < and \ in it, so escape before colouring.
-      function show(raw) {
+      // Render the snake with its left edge at column x, clipped to the screen.
+      function paint(x) {
+        var raw = SNAKE.map(function (line) {
+          var s = x >= 0 ? new Array(x + 1).join(" ") + line : line.slice(-x);
+          return s.length > cols ? s.slice(0, cols) : s;
+        }).join("\n");
         box.innerHTML = c.green(U.esc(raw));
       }
 
-      // Reduced motion: skip the ride, just park the snake mid-screen.
+      // Reduced motion: skip the ride, just park the snake near the left edge.
       if (reducedMotion()) {
-        show(paint(Math.floor(cols / 2) - LEN, 0.5));
+        paint(2);
         return undefined;
       }
 
       term.ready = false; // the show has the floor until it's done
-      var x = cols, // head enters from the right edge, body off-screen
-        phase = 0,
+      var x = cols, // the snake enters from the right edge, body off-screen
         done = false;
 
       function stop() {
@@ -1658,14 +1630,13 @@
         if (done) {
           return;
         }
-        if (x <= -(LEN + 2)) {
+        if (x <= -snakeW) {
           stop();
           return;
         }
-        show(paint(x, phase));
+        paint(x);
         term.scroll();
         x -= 2;
-        phase += 0.3;
         setTimeout(tick, 55);
       })();
       return undefined;
