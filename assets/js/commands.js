@@ -1519,9 +1519,9 @@
   /* ---- python (easter egg) ----------------------------------------- */
   // You asked for Python; you get a python. In the spirit of `sl`, an ASCII
   // snake slithers across the screen instead of dropping you into an
-  // interpreter. Its body is a travelling sine wave drawn from /, \ and ~
-  // strokes whose phase advances each frame, so the whole length ripples as
-  // it crosses; the head leads with an eye and a flicking forked tongue.
+  // interpreter. Its body is a travelling wave drawn from /, \ and ~ strokes
+  // whose phase advances each frame, so the whole length ripples as it
+  // crosses; the head leads with an eye and a flicking forked tongue.
   def("python", {
     group: "Fun",
     hidden: true,
@@ -1555,15 +1555,25 @@
       }
 
       var AMP = 2; // rows the body rises and falls around its centre line
-      var FREQ = 0.34; // how tight the slither waves are
-      var LEN = 36; // body length, in characters
+      var FREQ = 0.38; // how tight the slither waves are
+      var LEN = 32; // body length, in characters
       var ROWS = AMP * 2 + 1;
+
+      // A triangle wave: like a sine, but it turns at a sharp point rather than
+      // flattening out at the very top and bottom. A rounded *sine* lingers on
+      // its peak row for a few columns, and those little horizontal runs line
+      // up into a stray dash along the snake's top and bottom edges. A triangle
+      // turns at a single column, so the body stays a clean diagonal weave with
+      // nothing left lying along the bottom.
+      function tri(t) {
+        return (2 / Math.PI) * Math.asin(Math.sin(t));
+      }
 
       // Row of body segment i (0 = head) on the travelling wave at this phase.
       // The minus on phase walks each crest from head toward tail over time, so
       // the ripple runs the natural way as the snake heads off to the left.
       function wave(i, phase) {
-        return AMP + Math.round(AMP * Math.sin(i * FREQ - phase));
+        return AMP + Math.round(AMP * tri(i * FREQ - phase));
       }
 
       // Render the snake with its head at column headX, rippling with `phase`.
