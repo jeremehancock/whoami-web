@@ -1554,9 +1554,9 @@
       }
 
       // The coiled snake sprite. Eyes + snout lead on the left; the looped
-      // body trails off to the right. It's a fixed picture that scrolls across
-      // the screen, exactly like the `sl` locomotive — no per-row wiggle, so
-      // nothing stray ever flickers along the bottom edge.
+      // body trails off to the right. It scrolls across the screen like the
+      // `sl` locomotive, but rides a sine path as it goes (see paint) so it
+      // weaves up and down — i.e. it slithers — without smearing the coils.
       var SNAKE = [
         "   _________         _________",
         "  /         \\       /         \\",
@@ -1574,12 +1574,39 @@
         return Math.max(m, l.length);
       }, 0);
 
-      // Render the snake with its left edge at column x, clipped to the screen.
+      // The slither: as it crosses, the whole snake rides a sine path, weaving
+      // up and down a couple of rows. The picture moves as one unit, so the
+      // coils stay crisp — they undulate across the screen rather than smear.
+      var AMP = 2; // rows the weave rises and falls
+      var FREQ = 0.18; // how tight the weave is as the snake travels
+      var ROWS = SNAKE.length + 2 * AMP; // padded so the weave never clips
+
+      // Render the snake with its left edge at column x. Its vertical offset
+      // rides a sine of x, so successive frames trace a smooth, slithery path.
       function paint(x) {
-        var raw = SNAKE.map(function (line) {
-          var s = x >= 0 ? new Array(x + 1).join(" ") + line : line.slice(-x);
-          return s.length > cols ? s.slice(0, cols) : s;
-        }).join("\n");
+        var off = AMP + Math.round(AMP * Math.sin(FREQ * x));
+        var grid = [],
+          r;
+        for (r = 0; r < ROWS; r++) {
+          grid.push(new Array(cols + 1).join(" ").split(""));
+        }
+        SNAKE.forEach(function (line, li) {
+          var row = li + off;
+          if (row < 0 || row >= ROWS) {
+            return;
+          }
+          for (var ci = 0; ci < line.length; ci++) {
+            var col = x + ci;
+            if (col >= 0 && col < cols) {
+              grid[row][col] = line.charAt(ci);
+            }
+          }
+        });
+        var raw = grid
+          .map(function (row) {
+            return row.join("").replace(/\s+$/, "");
+          })
+          .join("\n");
         box.innerHTML = c.green(U.esc(raw));
       }
 
