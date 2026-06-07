@@ -1516,5 +1516,161 @@
     },
   });
 
+  /* ---- python (easter egg) ----------------------------------------- */
+  // You asked for Python; you get a python. In the spirit of `sl`, a slithery
+  // ASCII snake undulates across the screen instead of dropping you into an
+  // interpreter. The body is a sine wave whose phase advances each frame, so
+  // the diagonal `/` `\` `~` segments ripple like a real slither; the head
+  // leads on the left with a flicking forked tongue.
+  def("python", {
+    group: "Fun",
+    hidden: true,
+    summary: "a python slithers past (you wanted the snake, right?)",
+    usage: "python",
+    description:
+      "You typed `python`. Sadly there's no interpreter here — but there is a\n" +
+      "python. As tradition demands (see `sl`), an ASCII snake slithers across\n" +
+      "the screen instead. A key or click lets it pass faster.",
+    see: "sl",
+    run: function (ctx) {
+      var term = ctx.term;
+      var box = term.write("", "art");
+
+      // Measure how many characters fit across the screen at the art font
+      // size, so the snake scrolls the visible width without overflowing.
+      var cols = 64;
+      try {
+        var probe = document.createElement("span");
+        probe.style.whiteSpace = "pre";
+        probe.textContent = "0123456789";
+        box.appendChild(probe);
+        var cw = probe.getBoundingClientRect().width / 10;
+        var bw = box.getBoundingClientRect().width;
+        box.removeChild(probe);
+        if (cw && bw) {
+          cols = Math.max(24, Math.floor(bw / cw) - 1);
+        }
+      } catch (e) {
+        /* not measurable (e.g. headless) — keep the default */
+      }
+
+      var AMP = 2; // wiggle reaches 2 rows above/below the centre line
+      var ROWS = AMP * 2 + 1; // 5 rows tall
+      var LEN = 34; // body length, in characters
+      // Keep AMP*FREQ < 1 so the rounded row never jumps more than one step
+      // between columns — that's what keeps the slither line unbroken.
+      var FREQ = 0.35;
+
+      // The vertical row of body segment i, riding the travelling sine wave.
+      function wave(i, phase) {
+        return AMP + Math.round(AMP * Math.sin(i * FREQ + phase));
+      }
+
+      // Render the snake with its head at column headX, body trailing to the
+      // right, undulating with the given phase. Returns ROWS lines.
+      function paint(headX, phase) {
+        var grid = [],
+          r;
+        for (r = 0; r < ROWS; r++) {
+          grid.push(new Array(cols + 1).join(" ").split(""));
+        }
+        function put(x, y, ch) {
+          if (x >= 0 && x < cols && y >= 0 && y < ROWS) {
+            grid[y][x] = ch;
+          }
+        }
+        // Body: i = 1 (just behind the head) out to LEN (tail tip). Each cell's
+        // glyph follows the slope toward the next cell — climbing, falling, or
+        // level — so the line reads as one continuous, slithering body.
+        for (var i = 1; i <= LEN; i++) {
+          var here = wave(i, phase);
+          var ch;
+          if (i === LEN) {
+            ch = "~"; // tapered tail tip
+          } else {
+            var next = wave(i + 1, phase);
+            ch = next > here ? "\\" : next < here ? "/" : "~";
+          }
+          put(headX + i, here, ch);
+        }
+        // Head leads on the left with an open mouth and a forked tongue that
+        // flicks in and out as it goes.
+        var hy = wave(0, phase);
+        put(headX, hy, "<");
+        put(headX - 1, hy, Math.floor(phase) % 2 ? "~" : "=");
+        return grid
+          .map(function (row) {
+            return row.join("").replace(/\s+$/, "");
+          })
+          .join("\n");
+      }
+
+      // The art has literal < and \ in it, so escape before colouring.
+      function show(raw) {
+        box.innerHTML = c.green(U.esc(raw));
+      }
+
+      // Reduced motion: skip the ride, just park the snake mid-screen.
+      if (reducedMotion()) {
+        show(paint(Math.floor(cols / 2) - LEN, 0.5));
+        return undefined;
+      }
+
+      term.ready = false; // the show has the floor until it's done
+      var x = cols, // head enters from the right edge, body off-screen
+        phase = 0,
+        done = false;
+
+      function stop() {
+        if (done) {
+          return;
+        }
+        done = true;
+        global.removeEventListener("keydown", skip, true);
+        global.removeEventListener("pointerdown", skip, true);
+        if (box.parentNode) {
+          box.parentNode.removeChild(box);
+        }
+        term.ready = true;
+        term.focus();
+        term.scroll();
+      }
+      // A key or click cuts the slither short. Let real shortcuts (Ctrl/Cmd/Alt
+      // combos, e.g. reload) through; swallow plain keys so they don't type.
+      function skip(e) {
+        if (e && e.type === "keydown") {
+          if (e.ctrlKey || e.metaKey || e.altKey) {
+            return;
+          }
+          if (e.preventDefault) {
+            e.preventDefault();
+          }
+          if (e.stopPropagation) {
+            e.stopPropagation();
+          }
+        }
+        stop();
+      }
+      global.addEventListener("keydown", skip, true);
+      global.addEventListener("pointerdown", skip, true);
+
+      (function tick() {
+        if (done) {
+          return;
+        }
+        if (x <= -(LEN + 2)) {
+          stop();
+          return;
+        }
+        show(paint(x, phase));
+        term.scroll();
+        x -= 2;
+        phase += 0.3;
+        setTimeout(tick, 55);
+      })();
+      return undefined;
+    },
+  });
+
   global.Commands = COMMANDS;
 })(window);
