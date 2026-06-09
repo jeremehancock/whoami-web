@@ -1519,9 +1519,9 @@
   /* ---- python (easter egg) ----------------------------------------- */
   // You asked for Python; you get a python. In the spirit of `sl`, an ASCII
   // snake slithers across the screen instead of dropping you into an
-  // interpreter. Its body is a travelling wave drawn from /, \ and ~ strokes
-  // whose phase advances each frame, so the whole length ripples as it
-  // crosses; the head leads with an eye and a flicking forked tongue.
+  // interpreter. Its body rides a wavy track drawn from _, / and \ strokes
+  // that drifts against the direction of travel, so the whole length ripples
+  // as it crosses; the head leads with an eye and a flicking forked tongue.
   def("python", {
     group: "Fun",
     hidden: true,
@@ -1535,6 +1535,11 @@
     run: function (ctx) {
       var term = ctx.term;
       var box = term.write("", "art");
+      // No scrollbar, ever: paint() clips to the measured width, but half a
+      // pixel of rounding overflow would otherwise pop the art block's slim
+      // horizontal scrollbar in under the snake for the whole ride — a
+      // phantom line along the bottom.
+      box.style.overflow = "hidden";
 
       // Measure how many characters fit across the screen at the art font
       // size, so the snake scrolls the visible width without overflowing.
@@ -1554,30 +1559,40 @@
         /* not measurable (e.g. headless) — keep the default */
       }
 
-      var AMP = 2; // rows the body rises and falls around its centre line
-      var FREQ = 0.38; // how tight the slither waves are
-      var LEN = 32; // body length, in characters
-      var ROWS = AMP * 2 + 1;
+      // The body slides along a wave "track" anchored to the ground — the way
+      // a real snake's body follows the path its head traced. TRACK maps each
+      // ground column (mod its period) to the row + stroke of the classic
+      // ASCII wave:
+      //
+      //        __        __
+      //       /  \      /  \
+      //      /    \__  /    \__
+      //
+      // Because every frame samples this same hand-drawn curve, the body is
+      // always one clean, unbroken line — there is no rounding to plateau out
+      // and shed stray marks along the top or bottom. Advancing the phase each
+      // frame drifts the wave against the direction of travel, so the body
+      // visibly pushes back along the ground: a slither.
+      var TRACK = [
+        [2, "/"],
+        [1, "/"],
+        [0, "_"],
+        [0, "_"],
+        [1, "\\"],
+        [2, "\\"],
+        [2, "_"],
+        [2, "_"],
+      ];
+      var ROWS = 3;
+      var LEN = 40; // body length, in columns
 
-      // A triangle wave: like a sine, but it turns at a sharp point rather than
-      // flattening out at the very top and bottom. A rounded *sine* lingers on
-      // its peak row for a few columns, and those little horizontal runs line
-      // up into a stray dash along the snake's top and bottom edges. A triangle
-      // turns at a single column, so the body stays a clean diagonal weave with
-      // nothing left lying along the bottom.
-      function tri(t) {
-        return (2 / Math.PI) * Math.asin(Math.sin(t));
+      function trackAt(w) {
+        return TRACK[((w % TRACK.length) + TRACK.length) % TRACK.length];
       }
 
-      // Row of body segment i (0 = head) on the travelling wave at this phase.
-      // The minus on phase walks each crest from head toward tail over time, so
-      // the ripple runs the natural way as the snake heads off to the left.
-      function wave(i, phase) {
-        return AMP + Math.round(AMP * tri(i * FREQ - phase));
-      }
-
-      // Render the snake with its head at column headX, rippling with `phase`.
-      function paint(headX, phase) {
+      // Render the snake with its head at column hx and the wave shifted by
+      // integer phase ph.
+      function paint(hx, ph) {
         var grid = [],
           r;
         for (r = 0; r < ROWS; r++) {
@@ -1588,39 +1603,33 @@
             grid[y][x] = ch;
           }
         }
-        // Body: each segment is a stroke that leans toward the next one —
-        // climbing, falling, or level — so the wave reads as one unbroken,
-        // slithering line rather than a row of dots.
-        for (var i = 1; i <= LEN; i++) {
-          var here = wave(i, phase);
-          var ch;
-          if (i === LEN) {
-            ch = "~"; // wispy tail tip
-          } else {
-            var next = wave(i + 1, phase);
-            ch = next > here ? "\\" : next < here ? "/" : "~";
-          }
-          put(headX + i, here, ch);
+        // body: every column between neck and tail rides the track
+        for (var w = hx + 2; w <= hx + LEN; w++) {
+          var t = trackAt(w + ph);
+          put(w, t[0], t[1]);
         }
-        // Head: an eye and an open snout leading on the left, with a forked
-        // tongue that flicks in and out as it goes.
-        var hy = wave(0, phase);
-        put(headX + 1, hy, "o"); // eye
-        put(headX, hy, "<"); // open snout, facing the way it travels
-        if (Math.floor(phase) % 2 === 0) {
-          put(headX - 1, hy, "~"); // tongue, flicked out this beat
+        // Head: open snout + eye, riding flush with the first body cell so the
+        // head bobs up and down with the wave, plus a forked tongue that
+        // flicks in and out as it goes.
+        var hy = trackAt(hx + 2 + ph)[0];
+        put(hx + 1, hy, "o");
+        put(hx, hy, "<");
+        if (Math.abs(ph) % 6 < 3) {
+          put(hx - 1, hy, "~"); // tongue, flicked out this beat
         }
-        var raw = grid
-          .map(function (row) {
-            return row.join("").replace(/\s+$/, "");
-          })
-          .join("\n");
-        box.innerHTML = c.green(U.esc(raw));
+        // c.green() escapes its input, so the <, \ and & of the art are safe.
+        box.innerHTML = c.green(
+          grid
+            .map(function (row) {
+              return row.join("").replace(/\s+$/, "");
+            })
+            .join("\n"),
+        );
       }
 
       // Reduced motion: skip the ride, just park a still, wavy snake.
       if (reducedMotion()) {
-        paint(4, 0.6);
+        paint(Math.max(2, Math.floor((cols - LEN) / 2)), 0);
         return undefined;
       }
 
@@ -1666,14 +1675,14 @@
         if (done) {
           return;
         }
-        if (x <= -(LEN + 2)) {
+        if (x <= -(LEN + 3)) {
           stop();
           return;
         }
         paint(x, phase);
         term.scroll();
         x -= 2;
-        phase += 0.4;
+        phase -= 1; // drift the wave against the travel: the slither
         setTimeout(tick, 55);
       })();
       return undefined;
