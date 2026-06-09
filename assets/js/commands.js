@@ -1516,5 +1516,178 @@
     },
   });
 
+  /* ---- python (easter egg) ----------------------------------------- */
+  // You asked for Python; you get a python. In the spirit of `sl`, an ASCII
+  // snake slithers across the screen instead of dropping you into an
+  // interpreter. Its body rides a wavy track drawn from _, / and \ strokes
+  // that drifts against the direction of travel, so the whole length ripples
+  // as it crosses; the head leads with an eye and a flicking forked tongue.
+  def("python", {
+    group: "Fun",
+    hidden: true,
+    summary: "a python slithers past (you wanted the snake, right?)",
+    usage: "python",
+    description:
+      "You typed `python`. Sadly there's no interpreter here — but there is a\n" +
+      "python. As tradition demands (see `sl`), an ASCII snake slithers across\n" +
+      "the screen instead. A key or click lets it pass faster.",
+    see: "sl",
+    run: function (ctx) {
+      var term = ctx.term;
+      var box = term.write("", "art");
+      // No scrollbar, ever: paint() clips to the measured width, but half a
+      // pixel of rounding overflow would otherwise pop the art block's slim
+      // horizontal scrollbar in under the snake for the whole ride — a
+      // phantom line along the bottom.
+      box.style.overflow = "hidden";
+
+      // Measure how many characters fit across the screen at the art font
+      // size, so the snake scrolls the visible width without overflowing.
+      var cols = 64;
+      try {
+        var probe = document.createElement("span");
+        probe.style.whiteSpace = "pre";
+        probe.textContent = "0123456789";
+        box.appendChild(probe);
+        var cw = probe.getBoundingClientRect().width / 10;
+        var bw = box.getBoundingClientRect().width;
+        box.removeChild(probe);
+        if (cw && bw) {
+          cols = Math.max(24, Math.floor(bw / cw) - 1);
+        }
+      } catch (e) {
+        /* not measurable (e.g. headless) — keep the default */
+      }
+
+      // The body slides along a wave "track" anchored to the ground — the way
+      // a real snake's body follows the path its head traced. TRACK maps each
+      // ground column (mod its period) to the row + stroke of the classic
+      // ASCII wave:
+      //
+      //        __        __
+      //       /  \      /  \
+      //      /    \__  /    \__
+      //
+      // Because every frame samples this same hand-drawn curve, the body is
+      // always one clean, unbroken line — there is no rounding to plateau out
+      // and shed stray marks along the top or bottom. Advancing the phase each
+      // frame drifts the wave against the direction of travel, so the body
+      // visibly pushes back along the ground: a slither.
+      var TRACK = [
+        [2, "/"],
+        [1, "/"],
+        [0, "_"],
+        [0, "_"],
+        [1, "\\"],
+        [2, "\\"],
+        [2, "_"],
+        [2, "_"],
+      ];
+      var ROWS = 3;
+      var LEN = 40; // body length, in columns
+
+      function trackAt(w) {
+        return TRACK[((w % TRACK.length) + TRACK.length) % TRACK.length];
+      }
+
+      // Render the snake with its head at column hx and the wave shifted by
+      // integer phase ph.
+      function paint(hx, ph) {
+        var grid = [],
+          r;
+        for (r = 0; r < ROWS; r++) {
+          grid.push(new Array(cols + 1).join(" ").split(""));
+        }
+        function put(x, y, ch) {
+          if (x >= 0 && x < cols && y >= 0 && y < ROWS) {
+            grid[y][x] = ch;
+          }
+        }
+        // body: every column between neck and tail rides the track
+        for (var w = hx + 2; w <= hx + LEN; w++) {
+          var t = trackAt(w + ph);
+          put(w, t[0], t[1]);
+        }
+        // Head: open snout + eye, riding flush with the first body cell so the
+        // head bobs up and down with the wave, plus a forked tongue that
+        // flicks in and out as it goes.
+        var hy = trackAt(hx + 2 + ph)[0];
+        put(hx + 1, hy, "o");
+        put(hx, hy, "<");
+        if (Math.abs(ph) % 6 < 3) {
+          put(hx - 1, hy, "~"); // tongue, flicked out this beat
+        }
+        // c.green() escapes its input, so the <, \ and & of the art are safe.
+        box.innerHTML = c.green(
+          grid
+            .map(function (row) {
+              return row.join("").replace(/\s+$/, "");
+            })
+            .join("\n"),
+        );
+      }
+
+      // Reduced motion: skip the ride, just park a still, wavy snake.
+      if (reducedMotion()) {
+        paint(Math.max(2, Math.floor((cols - LEN) / 2)), 0);
+        return undefined;
+      }
+
+      term.ready = false; // the show has the floor until it's done
+      var x = cols, // the head enters from the right edge, body off-screen right
+        phase = 0,
+        done = false;
+
+      function stop() {
+        if (done) {
+          return;
+        }
+        done = true;
+        global.removeEventListener("keydown", skip, true);
+        global.removeEventListener("pointerdown", skip, true);
+        if (box.parentNode) {
+          box.parentNode.removeChild(box);
+        }
+        term.ready = true;
+        term.focus();
+        term.scroll();
+      }
+      // A key or click cuts the slither short. Let real shortcuts (Ctrl/Cmd/Alt
+      // combos, e.g. reload) through; swallow plain keys so they don't type.
+      function skip(e) {
+        if (e && e.type === "keydown") {
+          if (e.ctrlKey || e.metaKey || e.altKey) {
+            return;
+          }
+          if (e.preventDefault) {
+            e.preventDefault();
+          }
+          if (e.stopPropagation) {
+            e.stopPropagation();
+          }
+        }
+        stop();
+      }
+      global.addEventListener("keydown", skip, true);
+      global.addEventListener("pointerdown", skip, true);
+
+      (function tick() {
+        if (done) {
+          return;
+        }
+        if (x <= -(LEN + 3)) {
+          stop();
+          return;
+        }
+        paint(x, phase);
+        term.scroll();
+        x -= 2;
+        phase -= 1; // drift the wave against the travel: the slither
+        setTimeout(tick, 55);
+      })();
+      return undefined;
+    },
+  });
+
   global.Commands = COMMANDS;
 })(window);
