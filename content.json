@@ -46,7 +46,7 @@
         "=============================",
         "",
         "  * Software Developer II at Liquid Web (customer control panels).",
-        "  * Tinkering with Plex/Jellyfin tools: CLIX, Ludanta, Posteria.",
+        "  * Tinkering with Plex/Jellyfin tools: CLIX, Ludanta, Marquee.",
         "  * Documenting the homelab and shipping the odd dumb project.",
         "",
         "The fun stuff lives at https://dumbprojects.com"
@@ -62,7 +62,7 @@
         "  clix.md                Plex terminal media player",
         "  homelab.md             Offline homelab docs",
         "  ludanta.md             Now Playing for Plex/Jellyfin",
-        "  posteria.md            Plex poster management app",
+        "  marquee.md             Plex poster management app",
         "  ai-game-collection.md  AI-powered games",
         "  random-goat.md         Random goat gifs",
         "",
@@ -89,12 +89,12 @@
         "",
         "  link:  https://github.com/jeremehancock/Ludanta"
       ],
-      "posteria.md": [
-        "# Posteria",
+      "marquee.md": [
+        "# Marquee",
         "",
         "A web app for managing your Plex posters.",
         "",
-        "  link:  https://posteria.app"
+        "  link:  https://marquee.dumbprojects.com"
       ],
       "ai-game-collection.md": [
         "# AI Game Collection",
