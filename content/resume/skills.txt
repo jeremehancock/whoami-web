@@ -3,8 +3,8 @@ resume - skills
 
 Languages
   PHP · JavaScript · TypeScript · Python · Bash · SQL · HTML · CSS
-    Bash leads at 42 repositories, then JavaScript at 34, PHP at 33, and
-    Python at 15, across 111 public repos.
+    Across 111 public repos, Bash leads with 42, then JavaScript at 34,
+    PHP at 33, and Python at 15.
 
 Backend & APIs
   PHP 8.4 · Slim 4 · PSR-4 · PHP-DI · Twig · Guzzle · Monolog · SQLite
@@ -16,18 +16,18 @@ Frontend
   React · TypeScript · MUI · Emotion · Storybook · Design systems
   Next.js · Vanilla JS · PWA · Service Workers · SVG · Accessibility
     UnderCurrent is a React/MUI design system of roughly 100 components.
-    homelab.md is one dependency-free file.
+    homelab.md is a single dependency-free file.
 
 Testing & Code Quality
   PHPUnit · PHPStan · PHP-CS-Fixer · ESLint · Prettier · QE/QA
-    Marquee runs PHPStan at level 10, its strictest, with 74 test files
-    over 106 source files, gated on every push.
+    Marquee runs PHPStan at level 10, its strictest setting, plus 74
+    test files covering 106 source files, all gated on every push.
 
 DevOps & CI/CD
   Docker · Docker Compose · Multi-stage builds · GitHub Actions · Buildx
   QEMU · Docker Hub · Ansible · Vagrant · Nginx · php-fpm
-    GitHub Actions lints, tests, builds, and ships multi-arch amd64 and
-    arm64 images straight to Docker Hub.
+    GitHub Actions lints, tests, builds, and ships amd64 and arm64
+    images straight to Docker Hub.
 
 Linux & Self-Hosting
   Ubuntu · Debian packaging · APT repos · systemd · cron · Proxmox
@@ -38,13 +38,13 @@ Linux & Self-Hosting
 Plugins & Integrations
   Plex · Jellyfin · Emby · TMDB · TVDB · Fanart.tv · Bludit plugins
   CMS plugins · API design · PIN-based auth
-    Eight PHP plugins extend Bludit. Marquee and Glimpse read Plex,
-    Jellyfin, and Emby, and pull art from TMDB.
+    Eight PHP plugins extend Bludit. Marquee sources Plex artwork from
+    TMDB, TVDB, and Fanart.tv. Glimpse reads Plex, Jellyfin, and Emby.
 
 CLI & Shell Tooling
   Bash · curses TUI · fzf · jq · xmlstarlet · Self-updating scripts
     CLIX and Ludanta are pure Bash with built-in updaters. fail2ban-tui
-    is curses on the Python standard library.
+    is a curses interface built on the Python standard library.
 
 AI-Assisted Development
   Spec-driven development · OpenSpec · Claude Code · Prompt-to-product
