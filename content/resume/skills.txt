@@ -1,0 +1,54 @@
+resume - skills
+===============
+
+Languages
+  PHP · JavaScript · TypeScript · Python · Bash · SQL · HTML · CSS
+    Bash leads at 42 repositories, then JavaScript at 34, PHP at 33, and
+    Python at 15, across 111 public repos.
+
+Backend & APIs
+  PHP 8.4 · Slim 4 · PSR-4 · PHP-DI · Twig · Guzzle · Monolog · SQLite
+  PDO · REST · XML
+    Marquee's 106 classes run on Slim 4, with PSR-4 autoloading, PHP-DI
+    wiring, Twig views, and a SQLite store.
+
+Frontend
+  React · TypeScript · MUI · Emotion · Storybook · Design systems
+  Next.js · Vanilla JS · PWA · Service Workers · SVG · Accessibility
+    UnderCurrent is a React/MUI design system of roughly 100 components.
+    homelab.md is one dependency-free file.
+
+Testing & Code Quality
+  PHPUnit · PHPStan · PHP-CS-Fixer · ESLint · Prettier · QE/QA
+    Marquee runs PHPStan at level 10, its strictest, with 74 test files
+    over 106 source files, gated on every push.
+
+DevOps & CI/CD
+  Docker · Docker Compose · Multi-stage builds · GitHub Actions · Buildx
+  QEMU · Docker Hub · Ansible · Vagrant · Nginx · php-fpm
+    GitHub Actions lints, tests, builds, and ships multi-arch amd64 and
+    arm64 images straight to Docker Hub.
+
+Linux & Self-Hosting
+  Ubuntu · Debian packaging · APT repos · systemd · cron · Proxmox
+  Raspberry Pi · Prometheus · Grafana · Node Exporter
+    UbuntuCE was a branded Ubuntu remix with hosted APT repos. A Pi
+    cluster runs Prometheus and Grafana via Ansible.
+
+Plugins & Integrations
+  Plex · Jellyfin · Emby · TMDB · TVDB · Fanart.tv · Bludit plugins
+  CMS plugins · API design · PIN-based auth
+    Eight PHP plugins extend Bludit. Marquee and Glimpse read Plex,
+    Jellyfin, and Emby, and pull art from TMDB.
+
+CLI & Shell Tooling
+  Bash · curses TUI · fzf · jq · xmlstarlet · Self-updating scripts
+    CLIX and Ludanta are pure Bash with built-in updaters. fail2ban-tui
+    is curses on the Python standard library.
+
+AI-Assisted Development
+  Spec-driven development · OpenSpec · Claude Code · Prompt-to-product
+    Marquee is built spec-first with OpenSpec. AI Game Collection and
+    Dumb Projects are portfolios of AI-built apps.
+
+See also:  cat resume/experience.txt  ·  cat resume/education.txt

@@ -6,7 +6,7 @@ of the web. Poke around like you would on any Linux box:
     whoami          the short version of me
     ls              see what's here
     cd projects     stuff I've built
-    cd resume       where I've worked
+    cd resume       where I've worked (and the PDF version)
     cat <file>      read anything
     help            every command this shell knows
 
