@@ -123,8 +123,9 @@ Edit it and reload — no build step.
 Add a key, and `ls`/`cd`/`cat`/`tree`/tab-completion pick it up automatically.
 
 So you can keep short things inline and write long pages as real markdown files
-under [`content/`](content/) — there are three examples in there already
-(`README.md`, `about/bio.txt`, and `resume/experience.txt`).
+under [`content/`](content/) — there are a few examples in there already
+(`README.md`, `about/bio.txt`, `resume/experience.txt`, and
+`resume/skills.txt`).
 
 Other knobs:
 
@@ -139,6 +140,28 @@ Other knobs:
 > JSON has no comments, so the `// …` notes above are just for illustration —
 > don't put them in the real file.
 
+## Keeping the résumé in sync
+
+The résumé is **generated**, not hand-edited. `data.json` on
+[jeremehancock.com](https://github.com/jeremehancock/jeremehancock.com) is the
+single source of truth; after changing the `resume` or `skills` sections there,
+run:
+
+```bash
+./scripts/sync-resume.py     # then: git diff, and commit
+```
+
+That regenerates `content/resume/experience.txt`, `content/resume/skills.txt`,
+and the `education.txt` block inside `content.json` — and nothing else. The
+résumé `README.md`, `download.txt`, and every bit of prose stay hand-written.
+
+`--check` reports drift and exits non-zero without writing. `--source path.json`
+reads a local file instead of fetching the live site.
+
+The script **hard-fails on any field it doesn't recognize**, which is the whole
+point: when `data.json` grows a key, you get an error instead of a silent
+omission.
+
 ## Project layout
 
 ```
@@ -147,7 +170,10 @@ content.json             >>> your content: profile + the filesystem tree <<<
 content/                 optional real .md/.txt files referenced from content.json
 ├── README.md
 ├── about/bio.txt
-└── resume/experience.txt
+├── resume/experience.txt   generated — see "Keeping the résumé in sync"
+└── resume/skills.txt       generated — see "Keeping the résumé in sync"
+scripts/
+└── sync-resume.py       regenerates the résumé from jeremehancock.com/data.json
 assets/
 ├── css/style.css        window chrome, cursor, colours, themes
 └── js/
