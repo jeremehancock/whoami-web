@@ -4,7 +4,7 @@
   "host": "whoami",
   "profile": {
     "name": "Michael Jereme Hancock",
-    "role": "Software Developer",
+    "role": "Software Engineer II",
     "location": "Nexcess/Liquid Web",
     "tagline": "I'm just a guy who likes to tinker.",
     "shell": "jsh",
@@ -50,11 +50,11 @@
         "about - now (what I am up to)",
         "=============================",
         "",
-        "  * Software Developer II at Nexcess/Liquid Web (control panels).",
-        "  * Tinkering with Plex/Jellyfin tools: CLIX, Ludanta, Marquee.",
+        "  * Software Engineer II at Nexcess/Liquid Web (control panels).",
+        "  * Tinkering with Plex/Jellyfin tools: CLIX, Ludanta, Marquee,\n    Glimpse, and Cinemetric.",
         "  * Documenting the homelab and shipping the odd dumb project.",
         "",
-        "The fun stuff lives at https://dumbprojects.com"
+        "The fun stuff lives at https://jeremehancock.com and https://dumbprojects.com"
       ]
     },
     "projects": {
@@ -64,14 +64,16 @@
         "",
         "Things I've built. `cat` any of them for details:",
         "",
+        "  cinemetric.md          Plex reports in Claude Code",
         "  clix.md                Plex terminal media player",
+        "  glimpse.md             Plex/Jellyfin/Emby media viewer",
         "  homelab.md             Offline homelab docs",
         "  ludanta.md             Now Playing for Plex/Jellyfin",
         "  marquee.md             Plex poster management app",
         "  ai-game-collection.md  AI-powered games",
         "  random-goat.md         Random goat gifs",
         "",
-        "More at https://dumbprojects.com · https://github.com/jeremehancock"
+        "More at https://jeremehancock.com · https://dumbprojects.com · https://github.com/jeremehancock"
       ],
       "clix.md": [
         "# CLIX",
@@ -79,6 +81,20 @@
         "A Plex terminal media player — browse and play your Plex\nlibrary right from the command line.",
         "",
         "  link:  https://github.com/jeremehancock/CLIX"
+      ],
+      "cinemetric.md": [
+        "# Cinemetric",
+        "",
+        "A Claude Code plugin for Plex. Ask Claude about your library,\nserver health, and who's been watching, and get plain-English\nreports. Read-only, so nothing on your server is ever changed.",
+        "",
+        "  link:  https://cinemetric.dev"
+      ],
+      "glimpse.md": [
+        "# Glimpse",
+        "",
+        "A self-hosted media viewer for browsing your Plex, Jellyfin,\nor Emby movies and TV shows in a clean, responsive web app.",
+        "",
+        "  link:  https://getglimpse.now"
       ],
       "homelab.md": [
         "# homelab.md",
@@ -188,7 +204,8 @@
         "      (|     | )  respect. since you're here, try these:",
         "     /'\\_   _/`\\",
         "     \\___)=(___/     cowsay · neofetch · theme amber",
-        "                     and poke around https://dumbprojects.com",
+        "                     and poke around https://jeremehancock.com",
+        "                     and https://dumbprojects.com",
         "",
         "  Curiosity is the whole job. Keep poking."
       ]

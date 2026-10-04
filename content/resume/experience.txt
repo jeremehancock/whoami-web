@@ -2,7 +2,7 @@ resume - experience
 ===================
 
 Nexcess/Liquid Web  ·  liquidweb.com
-  2021 – present   Software Developer II
+  2021 – present   Software Engineer II
     - Build and maintain the UI for our customer-facing control panels.
     - One of the original developers of UnderCurrent, the Nexcess design
       system, and a primary contributor since: roughly 100 React
