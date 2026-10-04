@@ -194,7 +194,7 @@
     host: "whoami",
     profile: {
       name: "Your Name",
-      role: "Software Developer",
+      role: "Software Engineer II",
       location: "Your Company",
       tagline: "Something about me...",
       site: "https://yoursite.com",
