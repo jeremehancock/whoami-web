@@ -51,10 +51,11 @@
         "=============================",
         "",
         "  * Software Engineer II at Nexcess/Liquid Web (control panels).",
-        "  * Tinkering with Plex/Jellyfin tools: CLIX, Ludanta, Marquee,\n    Glimpse, and Cinemetric.",
+        "  * Building Plex/Jellyfin tools: Marquee, Glimpse, Cinemetric,\n    and CLIX, plus the LeafMD markdown editor.",
         "  * Documenting the homelab and shipping the odd dumb project.",
         "",
-        "The fun stuff lives at https://jeremehancock.com and https://dumbprojects.com"
+        "Featured projects: https://jeremehancock.com",
+        "Other fun stuff:   https://dumbprojects.com"
       ]
     },
     "projects": {
@@ -62,74 +63,77 @@
         "projects",
         "========",
         "",
-        "Things I've built. `cat` any of them for details:",
+        "My featured projects (the same ones on https://jeremehancock.com).",
+        "`cat` any of them for details:",
         "",
-        "  cinemetric.md          Plex reports in Claude Code",
-        "  clix.md                Plex terminal media player",
-        "  glimpse.md             Plex/Jellyfin/Emby media viewer",
-        "  homelab.md             Offline homelab docs",
-        "  ludanta.md             Now Playing for Plex/Jellyfin",
-        "  marquee.md             Plex poster management app",
-        "  ai-game-collection.md  AI-powered games",
-        "  random-goat.md         Random goat gifs",
+        "  marquee.md        Plex poster manager",
+        "  glimpse.md        Share your library as a poster wall",
+        "  cinemetric.md     Plex reports in Claude Code",
+        "  clix.md           Plex media player for the terminal",
+        "  leafmd.md         Simple markdown editor for Linux",
+        "  random-goat.md    Random goat GIFs",
         "",
-        "More at https://jeremehancock.com · https://dumbprojects.com · https://github.com/jeremehancock"
-      ],
-      "clix.md": [
-        "# CLIX",
+        "Want more? The other fun stuff (AI experiments, games, and",
+        "gloriously dumb little apps) lives at:",
         "",
-        "A Plex terminal media player — browse and play your Plex\nlibrary right from the command line.",
+        "  >> https://dumbprojects.com <<",
         "",
-        "  link:  https://github.com/jeremehancock/CLIX"
-      ],
-      "cinemetric.md": [
-        "# Cinemetric",
-        "",
-        "A Claude Code plugin for Plex. Ask Claude about your library,\nserver health, and who's been watching, and get plain-English\nreports. Read-only, so nothing on your server is ever changed.",
-        "",
-        "  link:  https://cinemetric.dev"
-      ],
-      "glimpse.md": [
-        "# Glimpse",
-        "",
-        "A self-hosted media viewer for browsing your Plex, Jellyfin,\nor Emby movies and TV shows in a clean, responsive web app.",
-        "",
-        "  link:  https://getglimpse.now"
-      ],
-      "homelab.md": [
-        "# homelab.md",
-        "",
-        "Offline homelab documentation — your homelab, documented in\nmarkdown and served locally.",
-        "",
-        "  link:  https://github.com/jeremehancock/homelab.md"
-      ],
-      "ludanta.md": [
-        "# Ludanta",
-        "",
-        "A \"Now Playing\" display for Plex and Jellyfin.",
-        "",
-        "  link:  https://github.com/jeremehancock/Ludanta"
+        "Everything else: https://github.com/jeremehancock"
       ],
       "marquee.md": [
         "# Marquee",
         "",
-        "A web app for managing your Plex posters.",
+        "A self-hosted poster manager for Plex. Swap the artwork for\nany movie, show, season, or collection, and lock it in so Plex\nwon't overwrite it.",
         "",
+        "  tags:  Plex, Posters, Media",
         "  link:  https://getmarquee.now"
       ],
-      "ai-game-collection.md": [
-        "# AI Game Collection",
+      "glimpse.md": [
+        "# Glimpse",
         "",
-        "A collection of AI-powered games.",
+        "Share your Plex, Jellyfin, or Emby library as a browsable wall\nof posters. People just open a link: no account, no app, and\nno access to your server.",
         "",
-        "  link:  https://aigamecollection.com"
+        "  tags:  Plex, Jellyfin, Emby",
+        "  link:  https://getglimpse.now"
+      ],
+      "cinemetric.md": [
+        "# Cinemetric",
+        "",
+        "A Claude Code plugin for Plex. Ask Claude about your library,\nserver health, or who's been watching. Read-only, so nothing\non your server is changed.",
+        "",
+        "  tags:  Plex, Claude Code, AI",
+        "  link:  https://cinemetric.dev"
+      ],
+      "clix.md": [
+        "# CLIX",
+        "",
+        "A Plex media player that lives entirely in your terminal.\nSearch and play your movies, shows, and music without ever\nleaving the command line.",
+        "",
+        "  tags:  Plex, Terminal, Media",
+        "  link:  https://github.com/jeremehancock/CLIX"
+      ],
+      "leafmd.md": [
+        "# LeafMD",
+        "",
+        "A markdown editor for Linux that's simple on purpose. Read\nyour document formatted like GitHub, flip to the raw text to\nedit, or see both at once.",
+        "",
+        "  tags:  Linux, Markdown, Rust",
+        "  link:  https://leafmd.app"
       ],
       "random-goat.md": [
         "# Random Goat",
         "",
-        "Looking for random goat gifs? Of course you are.",
+        "Exactly what it sounds like: a delightfully pointless source\nof random goat GIFs whenever you need one. Share your favorite\nor embed it on your site.",
         "",
+        "  tags:  Fun, GIFs, Goats",
         "  link:  https://randomgoat.com"
+      ],
+      "dumbprojects.md": [
+        "# Dumb Projects",
+        "",
+        "Not everything I make is a serious project. For the rest of the\nfun stuff (AI-built experiments, games, and gloriously dumb\nlittle apps made mostly for the fun of it), head over to:",
+        "",
+        "  link:  https://dumbprojects.com"
       ]
     },
     "resume": {
